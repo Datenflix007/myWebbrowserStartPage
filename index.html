@@ -19,7 +19,6 @@
       --shadow: 0 6px 30px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.03);
       --ok:#38d39f;
       --warn:#ffd166;
-      --danger:#ff7a7a;
     }
     *{ box-sizing: border-box; }
     body{
@@ -28,10 +27,10 @@
       color: var(--text);
       background: radial-gradient(80% 120% at 10% 0%, #111b2d 0%, var(--bg) 40%) no-repeat fixed;
     }
-    .shell{ max-width:1200px; margin:0 auto; padding: 28px 20px 60px; }
+    .shell{ max-width:1200px; margin:0 auto; padding: 28px 20px 0; }
     .topbar{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .brand{ display:flex; align-items:center; gap:14px; font-weight:700; cursor:pointer; }
-    .brand .dot{ width:16px; height:16px; border-radius:8px; background:linear-gradient(135deg,var(--accent1),var(--accent2)); }
+    .brand .dot{ width:16px; height:16px; border-radius:8px; background:linear-gradient(135deg,var(--accent1),var(--accent2)); box-shadow:0 0 24px rgba(122,168,255,.45); }
     .card{ margin-top:10px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius: var(--radius); box-shadow: var(--shadow); padding:18px; }
     .row{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
     label{ font-size:12px; color:#a6b1c2; font-weight:600; text-transform:uppercase; }
@@ -46,22 +45,71 @@
     /* Favoriten-Leiste */
     .favoritesBar{ margin:20px 0; display:flex; gap:10px; flex-wrap:wrap; }
     .favoritesBar a{ text-decoration:none; color: var(--text); background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 12px; border-radius:999px; white-space:nowrap; }
-
     .star{ cursor:pointer; font-size:18px; line-height:1; background:none; border:none; color:#9fb4ff; }
     .star.on{ color:#ffd166; text-shadow:0 0 12px rgba(255,209,102,.35); }
 
-    /* Radar + Top5 */
-    .radarWrap{ margin:18px 0 8px; display:grid; grid-template-columns: 420px 1fr; gap:24px; align-items:center; }
-    .radarCard{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px; }
-    .legend{ font-size:12px; color:#a6b1c2; margin-top:8px; }
-    .topCols{ display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
-    .topCols h4{ margin:0 0 6px; font-size:14px; color:#cfe3ff; }
-    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); margin:4px 6px 0 0; font-size:12px; }
+    /* Radarbereich mit Corner-Boxes */
+    .radarArea{
+      margin: 50px 0 10px;
+      padding: 18px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      border-radius: 28px;
+      position: relative;
+      height: 800px;
+    }
+    .radarWrap{
+      position: relative;
+      top: calc(var(--domains-box-height, 100px) + 20px);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding-top:100px; /* Canvas startet 100px unter Oberkante */
+    }
+    .radarCanvas {
+      background: rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      padding:16px;
+      width: 600px;
+      height: 480px;        /* Höhe hinzufügen */
+      display: flex;        /* Flexbox */
+      justify-content: center; /* horizontal mittig */
+      align-items: center;     /* vertikal mittig */
+    }
+
+    .radarLegend{ font-size:12px; color:#a6b1c2; margin-top:8px; max-width:760px; text-align:center; width:100%; width: 600px;}
+
+    .topBox{
+      position:absolute;
+      background: rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:12px;
+      padding:10px 12px;
+      width:260px;
+      backdrop-filter: blur(2px);
+    }
+    .topBox h4{ margin:0 0 8px; font-size:14px; }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
+      margin:4px 6px 0 0; font-size:12px;
+    }
     .pill .cnt{ font-weight:700; color:#cfe3ff; }
 
-    @media (max-width: 900px){
-      .radarWrap{ grid-template-columns:1fr; }
+    /* Positionen der Boxen (über/bei den Ecken) */
+    .box-domains{ top:14px; left:50%; transform:translateX(-50%); } /* über Domains */
+    .box-literatur{ top:50%; right:16px; transform:translateY(-50%); } /* rechts – Literatur */
+    .box-ki{ top:50%; left:16px; transform:translateY(-50%); }      /* links – KI; gleiche Höhe */
+
+    /* Footer – mittig */
+    footer{
+      display:flex; justify-content:center; align-items:center;
+      padding: 36px 0 60px;
+      color:#a6b1c2;
     }
+    footer a{ color:#a6b1c2; text-decoration:none; }
   </style>
 </head>
 <body>
@@ -72,7 +120,7 @@
       </div>
     </div>
 
-    <!-- Suche -->
+    <!-- SUCHE -->
     <div class="card">
       <div class="row">
         <div class="control">
@@ -86,10 +134,10 @@
         </div>
 
         <!-- Freisuche -->
-        <div class="control" id="freisuche_group" style="display:none;">
+        <div class="control" id="free_group" style="display:none; min-width:min(560px,100%);">
           <label for="free_input">URL oder Suchbegriff</label>
-          <form id="free_form" class="row">
-            <input id="free_input" type="text" placeholder="z. B. wikipedia.org oder 'Römer'"/>
+          <form id="free_form" class="row" style="gap:10px;">
+            <input id="free_input" type="text" placeholder="z. B. wikipedia.org oder 'Römer'" required style="flex:1;"/>
             <button>Los</button>
           </form>
         </div>
@@ -103,10 +151,10 @@
             <option value="jstor">JStor</option>
           </select>
         </div>
-        <div class="control" id="lit_query_group" style="display:none;">
+        <div class="control" id="lit_query_group" style="display:none; min-width:min(560px,100%);">
           <label for="lit_query">Schlagwort</label>
-          <form id="lit_form" class="row">
-            <input id="lit_query" type="text" placeholder="Digital History, ..." />
+          <form id="lit_form" class="row" style="gap:10px;">
+            <input id="lit_query" type="text" placeholder="Digital History, ..." required style="flex:1;"/>
             <button>Suchen</button>
           </form>
         </div>
@@ -116,49 +164,51 @@
           <label for="ki_model">LLM-Modell</label>
           <select id="ki_model">
             <option value="openai">OpenAI (ChatGPT)</option>
-            <option value="copilot">Copilot</option>
+            <option value="copilot">Microsoft Copilot</option>
             <option value="perplexity">Perplexity</option>
             <option value="claude">Claude</option>
           </select>
-        </div>
-        <div class="control" id="ki_query_group" style="display:none;">
-          <label for="ki_query">Prompt</label>
-          <form id="ki_form" class="row">
-            <input id="ki_query" type="text" placeholder="Frag die KI …" />
-            <button>Anfragen</button>
-          </form>
           <div id="ki_hint" style="display:none; margin-top:6px; color:#ff9e9e; font-weight:700;">
             Prompt ist in der Zwischenablage – bei der KI mit <strong>Strg+V</strong> einfügen.
           </div>
         </div>
+        <div class="control" id="ki_query_group" style="display:none; min-width:min(560px,100%);">
+          <label for="ki_query">Prompt</label>
+          <form id="ki_form" class="row" style="gap:10px;">
+            <input id="ki_query" type="text" placeholder="Frag die KI …" required style="flex:1;"/>
+            <button>Anfragen</button>
+          </form>
+        </div>
       </div>
     </div>
 
-    <!-- Favoriten -->
-    <h3 style="margin-top:18px;">Favoriten</h3>
+    <!-- Favoriten-Leiste -->
     <div id="favoritesBar" class="favoritesBar"></div>
 
-    <!-- Radar + Top 5 -->
-    <div class="radarWrap">
-      <div class="radarCard">
-        <canvas id="radar" width="380" height="380"></canvas>
-        <div class="legend">Netzdiagramm: Domänen • Literatur • KI — jeder neue Vorgang schlägt die jeweilige Achse um 1 aus.</div>
+    <!-- Radar + Top 5 an den Ecken -->
+    <section class="radarArea">
+      <div class="topBox box-domains">
+        <h4>Top 5 Domains</h4>
+        <div id="topDomains"></div>
       </div>
-      <div class="topCols">
-        <div>
-          <h4>Top 5 Domains</h4>
-          <div id="topDomains"></div>
+      <div class="topBox box-literatur">
+        <h4>Top 5 Literatur</h4>
+        <div id="topLit"></div>
+      </div>
+      <div class="topBox box-ki">
+        <h4>Top 5 KI-Prompts</h4>
+        <div id="topKI"></div>
+      </div>
+
+      <div class="radarWrap">
+        <div class="radarCanvas">
+          <canvas id="radar"></canvas>
         </div>
-        <div>
-          <h4>Top 5 Literatur</h4>
-          <div id="topLit"></div>
-        </div>
-        <div>
-          <h4>Top 5 KI-Prompts</h4>
-          <div id="topKI"></div>
+        <div class="radarLegend">
+          <b>Netzdiagramm:</b> Domänen • Literatur • KI — jeder neue Vorgang schlägt die jeweilige Achse um 1 aus.
         </div>
       </div>
-    </div>
+    </section>
 
     <!-- Nutzungsstatistik -->
     <section class="stats" id="stats">
@@ -171,8 +221,8 @@
       </table>
     </section>
 
-    <!-- Literatur -->
-    <section class="stats">
+    <!-- Literatur-Statistik -->
+    <section class="stats" id="literatureStats">
       <h3>Literaturrecherche-Statistik</h3>
       <table>
         <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
@@ -180,48 +230,53 @@
       </table>
     </section>
 
-    <!-- KI -->
-    <section class="stats">
+    <!-- KI-Statistik -->
+    <section class="stats" id="kiStats">
       <h3>KI-Anfragen</h3>
       <table>
         <thead><tr><th>Modell</th><th>Datum</th><th>Prompt</th></tr></thead>
         <tbody id="kiTableBody"></tbody>
       </table>
     </section>
+
+    <footer>
+      <a id="footerLink" href="https://datenflix007.github.io/" target="_blank" rel="noopener">© <span id="year"></span> Felix Staacke</a>
+    </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       /* ---------- DOM ---------- */
       const searchType = document.getElementById('searchType');
-      const free_group = document.getElementById('freisuche_group');
+
+      const free_group = document.getElementById('free_group');
       const free_form  = document.getElementById('free_form');
       const free_input = document.getElementById('free_input');
 
       const lit_group = document.getElementById('lit_group');
-      const lit_engine = document.getElementById('lit_engine');
       const lit_query_group = document.getElementById('lit_query_group');
+      const lit_engine = document.getElementById('lit_engine');
       const lit_form = document.getElementById('lit_form');
       const lit_query = document.getElementById('lit_query');
 
       const ki_group = document.getElementById('ki_group');
-      const ki_model = document.getElementById('ki_model');
       const ki_query_group = document.getElementById('ki_query_group');
+      const ki_model = document.getElementById('ki_model');
       const ki_form = document.getElementById('ki_form');
       const ki_query = document.getElementById('ki_query');
-      const ki_hint  = document.getElementById('ki_hint');
+      const ki_hint = document.getElementById('ki_hint');
 
+      const favoritesBar = document.getElementById("favoritesBar");
       const tableBody = document.getElementById("countTableBody");
       const litTableBody = document.getElementById("litTableBody");
       const kiTableBody = document.getElementById("kiTableBody");
-      const favoritesBar = document.getElementById("favoritesBar");
 
-      const radarCanvas = document.getElementById('radar');
-      const ctx = radarCanvas.getContext('2d');
+      const topDomainsEl= document.getElementById('topDomains');
+      const topLitEl    = document.getElementById('topLit');
+      const topKIEl     = document.getElementById('topKI');
 
-      const topDomainsEl = document.getElementById('topDomains');
-      const topLitEl = document.getElementById('topLit');
-      const topKIEl = document.getElementById('topKI');
+      document.getElementById('year').textContent = new Date().getFullYear();
 
       /* ---------- Storage ---------- */
       let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}");             // {domain: {count, dates[]}}
@@ -241,7 +296,7 @@
         if(isFavorite(domain)) favorites = favorites.filter(d=> d!==domain);
         else favorites.push(domain);
         localStorage.setItem('favoritesDomains', JSON.stringify(favorites));
-        refreshFavoritesBar(); updateDomainTable(); updateTopLists();
+        refreshFavoritesBar(); updateDomainTable(); updateTopLists(); updateRadar();
       }
 
       function upsertDomainCount(domain){
@@ -250,25 +305,104 @@
         localStorage.setItem("siteCounters", JSON.stringify(siteCounters));
       }
 
+      /* ---------- Suche: Show/Hide ---------- */
+      searchType.addEventListener('change', ()=>{
+        const v = searchType.value;
+        [free_group, lit_group, lit_query_group, ki_group, ki_query_group].forEach(el=> el.style.display='none');
+        if(v==='frei'){ free_group.style.display='block'; free_input.focus(); }
+        else if(v==='literatur'){ lit_group.style.display='block'; lit_query_group.style.display='block'; lit_query.focus(); }
+        else if(v==='ki'){ ki_group.style.display='block'; ki_query_group.style.display='block'; ki_query.focus(); updateKiHint(); }
+      });
+
+      /* ---------- Freisuche ---------- */
+      free_form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const input = free_input.value.trim();
+        if(!input) return;
+
+        let url = input, domain;
+        try { domain = new URL(input.startsWith('http')?input:'https://'+input).hostname; }
+        catch { domain = input; }
+
+        upsertDomainCount(domain);
+        updateDomainTable(); refreshFavoritesBar(); updateTopLists(); updateRadar();
+
+        const finalUrl = (domain === input)
+          ? `https://www.google.com/search?q=${encodeURIComponent(input)}`
+          : (url.startsWith('http') ? url : 'https://' + url);
+        window.open(finalUrl, '_blank');
+        free_input.value='';
+      });
+
+      /* ---------- Literatur ---------- */
+      lit_form.addEventListener('submit',(e)=>{
+        e.preventDefault();
+        const kw = lit_query.value.trim(); if(!kw) return;
+        const eng = lit_engine.value;
+        const date = todayISO();
+        ensure(literatur, eng, []);
+        literatur[eng].push({keyword:kw,date});
+        localStorage.setItem('literaturKeywords', JSON.stringify(literatur));
+        updateLiteratureTable(); updateTopLists(); updateRadar();
+
+        const urls = {
+          google:`https://www.google.com/search?q=${encodeURIComponent(kw)}`,
+          thulb:`https://suche.thulb.uni-jena.de/Search/Results?lookfor=${encodeURIComponent(kw)}`,
+          jstor:`https://www.jstor.org/action/doBasicSearch?Query=${encodeURIComponent(kw)}`
+        };
+        window.open(urls[eng], '_blank');
+        lit_query.value='';
+      });
+
+      /* ---------- KI ---------- */
+      function updateKiHint(){
+        const needsPaste = (ki_model.value==='openai' || ki_model.value==='copilot' || ki_model.value==='claude');
+        ki_hint.style.display = needsPaste ? 'block' : 'none';
+      }
+      ki_model.addEventListener('change', updateKiHint);
+
+      ki_form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const prompt = ki_query.value.trim(); if(!prompt) return;
+        const model = ki_model.value;
+        const date = todayISO();
+        kiQueries.push({model, prompt, date});
+        localStorage.setItem('kiQueries', JSON.stringify(kiQueries));
+        updateKiTable(); updateTopLists(); updateRadar();
+
+        const urls = {
+          openai:     "https://chat.openai.com/",
+          copilot:    "https://copilot.microsoft.com/",
+          claude:     "https://claude.ai/new",
+          perplexity: "https://www.perplexity.ai/?q=" + encodeURIComponent(prompt)
+        };
+        if(model!=='perplexity'){
+          try{ await navigator.clipboard.writeText(prompt); }catch{}
+        }
+        window.open(urls[model], '_blank');
+        ki_query.value='';
+        updateKiHint();
+      });
+
+      /* ---------- Favoriten / Tabellen ---------- */
       function refreshFavoritesBar(){
         favoritesBar.innerHTML = favorites
           .map(d=>`<a class="favLink" data-domain="${d}" href="https://${d}" target="_blank" rel="noopener">${d}</a>`)
           .join('');
+        favoritesBar.style.display = favorites.length ? 'flex' : 'none';
       }
 
       function updateDomainTable(){
         tableBody.innerHTML = "";
-        // sort by count desc
-        const rows = Object.entries(siteCounters)
-          .sort((a,b)=>b[1].count - a[1].count);
-        for(const [domain, {count}] of rows){
+        const rows = Object.entries(siteCounters).sort((a,b)=>b[1].count-a[1].count);
+        for(const [domain,{count}] of rows){
           const favOn = isFavorite(domain);
           const tr = document.createElement('tr');
           tr.innerHTML =
-            `<td><a class="domainLink" style="color: white;" data-domain="${domain}" href="https://${domain}" target="_blank" rel="noopener">${domain}</a></td>` +
-            `<td>${count}</td>` +
-            `<td style="width:70px; text-align:center;">` +
-              `<button class="star ${favOn?'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn?'★':'☆'}</button>` +
+            `<td><a class="domainLink" data-domain="${domain}" href="https://${domain}" target="_blank" rel="noopener" style="color:#dfe7ff;">${domain}</a></td>`+
+            `<td>${count}</td>`+
+            `<td style="width:70px; text-align:center;">`+
+            `<button class="star ${favOn?'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn?'★':'☆'}</button>`+
             `</td>`;
           tableBody.appendChild(tr);
         }
@@ -289,227 +423,126 @@
 
       function updateKiTable(){
         kiTableBody.innerHTML = "";
-        kiQueries.slice().reverse().forEach(({model,date,prompt})=>{
+        (kiQueries||[]).slice().reverse().forEach(({model,date,prompt})=>{
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${({openai:"OpenAI",copilot:"Copilot",perplexity:"Perplexity",claude:"Claude"})[model]||model}</td>`+
-                         `<td>${date}</td><td>${prompt}</td>`;
+          const label = ({openai:"OpenAI",copilot:"Copilot",perplexity:"Perplexity",claude:"Claude"})[model]||model;
+          tr.innerHTML = `<td>${label}</td><td>${date}</td><td>${prompt}</td>`;
           kiTableBody.appendChild(tr);
         });
       }
 
       /* ---------- Top 5 ---------- */
-      function renderPills(el, arr){ // arr: [{label,count}]
-        el.innerHTML = arr.slice(0,5).map(x => `<span class="pill"><span>${x.label}</span><span class="cnt">${x.count}</span></span>`).join('');
+      function renderPills(el, arr){
+        el.innerHTML = arr.slice(0,5).map(x => `<span class="pill"><span>${x.label}</span><span class="cnt">${x.count}</span></span>`).join('') || '<span class="pill">–</span>';
       }
       function updateTopLists(){
-        // Domains
-        const dom = Object.entries(siteCounters).map(([d,v])=>({label:d, count:v.count}))
+        const dom = Object.entries(siteCounters).map(([d,v])=>({label:d,count:v.count}))
           .sort((a,b)=>b.count-a.count);
         renderPills(topDomainsEl, dom);
 
-        // Literatur (über alle Engines)
         const litMap = {};
         Object.values(literatur||{}).flat().forEach(({keyword})=>{
-          litMap[keyword]=(litMap[keyword]||0)+1;
+          if(!keyword) return; litMap[keyword]=(litMap[keyword]||0)+1;
         });
-        const litArr = Object.entries(litMap).map(([k,c])=>({label:k, count:c})).sort((a,b)=>b.count-a.count);
+        const litArr = Object.entries(litMap).map(([k,c])=>({label:k,count:c})).sort((a,b)=>b.count-a.count);
         renderPills(topLitEl, litArr);
 
-        // KI Prompts
         const kiMap = {};
-        kiQueries.forEach(q=>{ kiMap[q.prompt]=(kiMap[q.prompt]||0)+1; });
-        const kiArr = Object.entries(kiMap).map(([p,c])=>({label:p, count:c})).sort((a,b)=>b.count-a.count);
+        (kiQueries||[]).forEach(({prompt})=>{
+          if(!prompt) return; kiMap[prompt]=(kiMap[prompt]||0)+1;
+        });
+        const kiArr = Object.entries(kiMap).map(([p,c])=>({label:p,count:c})).sort((a,b)=>b.count-a.count);
         renderPills(topKIEl, kiArr);
       }
 
-      /* ---------- Radar ---------- */
-      function totalDomains(){ return Object.values(siteCounters).reduce((s,v)=>s+v.count,0); }
-      function totalLiterature(){ return Object.values(literatur||{}).reduce((s,arr)=>s+arr.length,0); }
-      function totalKI(){ return (kiQueries||[]).length; }
-
-      function drawRadar(){
-        const w = radarCanvas.width, h = radarCanvas.height;
-        ctx.clearRect(0,0,w,h);
-        const cx=w/2, cy=h/2, R=Math.min(w,h)/2 - 18;
-
-        const vals = [totalDomains(), totalLiterature(), totalKI()];
-        const maxVal = Math.max(5, ...vals); // nie 0
-        const labels = ["Domains","Literatur","KI"];
-
-        // Grid (5 Ringe)
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255,255,255,.15)';
-        ctx.setLineDash([4,6]);
-        for(let i=1;i<=5;i++){
-          const r = R*i/5;
-          ctx.beginPath();
-          for(let a=0;a<3;a++){
-            const ang = -Math.PI/2 + a*2*Math.PI/3;
-            const x = cx + r*Math.cos(ang);
-            const y = cy + r*Math.sin(ang);
-            if(a===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      /* ---------- Radar (Chart.js) ---------- */
+      const radarCtx = document.getElementById('radar').getContext('2d');
+      const radarChart = new Chart(radarCtx, {
+        type: 'radar',
+        data: { labels: ['Domains','Literatur','KI'], datasets: [{ data: [0,0,0], backgroundColor:'rgba(122,168,255,.55)', borderColor:'rgba(122,168,255,.9)', borderWidth:2, pointRadius:0 }]},
+        options: {
+          responsive: true,
+          plugins: { legend: { display:false } },
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              beginAtZero: true,
+              suggestedMax: 5,
+              ticks: { display:false },
+              angleLines: { color:'rgba(255,255,255,.25)' },
+              grid: { color:'rgba(255,255,255,.18)', lineWidth:1, borderDash:[4,6] },
+              pointLabels: { color:'rgba(255,255,255,.9)', font:{ size:12 } }
+            }
           }
-          ctx.closePath(); ctx.stroke();
         }
-        ctx.setLineDash([]);
-        // Achsen
-        ctx.beginPath();
-        for(let a=0;a<3;a++){
-          const ang = -Math.PI/2 + a*2*Math.PI/3;
-          ctx.moveTo(cx,cy);
-          ctx.lineTo(cx + R*Math.cos(ang), cy + R*Math.sin(ang));
-        }
-        ctx.stroke();
-
-        // Labels
-        ctx.fillStyle = 'rgba(255,255,255,.8)';
-        ctx.font = '12px Inter, sans-serif';
-        for(let a=0;a<3;a++){
-          const ang = -Math.PI/2 + a*2*Math.PI/3;
-          const x = cx + (R+12)*Math.cos(ang);
-          const y = cy + (R+12)*Math.sin(ang)+4;
-          ctx.textAlign = (Math.cos(ang)>0.2)?'left':(Math.cos(ang)<-0.2?'right':'center');
-          ctx.fillText(labels[a], x, y);
-        }
-
-        // Data polygon
-        ctx.beginPath();
-        vals.forEach((v,i)=>{
-          const ang = -Math.PI/2 + i*2*Math.PI/3;
-          const r = (v/maxVal)*R;
-          const x = cx + r*Math.cos(ang);
-          const y = cy + r*Math.sin(ang);
-          if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-        });
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(122,168,255,.55)';
-        ctx.strokeStyle = 'rgba(122,168,255,.8)';
-        ctx.lineWidth = 2;
-        ctx.fill(); ctx.stroke();
-        ctx.restore();
+      });
+      function totals(){
+        const domains   = Object.values(siteCounters).reduce((s,v)=>s+v.count,0);
+        const literature= Object.values(literatur||{}).reduce((s,a)=>s+(a?.length||0),0);
+        const ki        = (kiQueries||[]).length;
+        return [domains, literature, ki];
+      }
+      function updateRadar(){
+        const t = totals();
+        const max = Math.max(5, ...t);
+        radarChart.options.scales.r.suggestedMax = max;
+        radarChart.data.datasets[0].data = t;
+        radarChart.update();
       }
 
-      function bumpAndRedraw(kind){
-        // kind: 'domain' | 'literature' | 'ki'
-        // Werte steigen über die jeweiligen Arrays/Counter sowieso; hier nur neu zeichnen:
-        drawRadar(); updateTopLists();
-      }
-
-      /* ---------- Suche: Show/Hide Gruppen ---------- */
-      searchType.addEventListener('change', ()=>{
-        const v = searchType.value;
-        [free_group, lit_group, lit_query_group, ki_group, ki_query_group].forEach(el=> el.style.display='none');
-        if(v==='frei'){ free_group.style.display='block'; free_input.focus(); }
-        else if(v==='literatur'){ lit_group.style.display='block'; lit_query_group.style.display='block'; lit_query.focus(); }
-        else if(v==='ki'){ ki_group.style.display='block'; ki_query_group.style.display='block'; ki_query.focus(); }
-      });
-
-      /* ---------- Aktionen zählen ---------- */
-      free_form.addEventListener('submit', (e)=>{
-        e.preventDefault();
-        const input = free_input.value.trim();
-        if(!input) return;
-
-        // Domain ermitteln oder Google-Suche
-        let target = input, domain;
-        try { domain = new URL(input.startsWith('http')?input:'https://'+input).hostname; }
-        catch { domain = input; }
-
-        upsertDomainCount(domain);
-        updateDomainTable(); refreshFavoritesBar(); bumpAndRedraw('domain');
-
-        const finalUrl = (domain === input)
-          ? `https://www.google.com/search?q=${encodeURIComponent(input)}`
-          : (target.startsWith('http')?target:'https://'+target);
-        window.open(finalUrl,'_blank');
-        free_input.value='';
-      });
-
-      lit_form.addEventListener('submit',(e)=>{
-        e.preventDefault();
-        const kw = lit_query.value.trim(); if(!kw) return;
-        const eng = lit_engine.value;
-        const date = todayISO();
-        ensure(literatur, eng, []);
-        literatur[eng].push({keyword:kw,date});
-        localStorage.setItem('literaturKeywords', JSON.stringify(literatur));
-        updateLiteratureTable(); bumpAndRedraw('literature');
-
-        const urls = {
-          google:`https://www.google.com/search?q=${encodeURIComponent(kw)}`,
-          thulb:`https://suche.thulb.uni-jena.de/Search/Results?lookfor=${encodeURIComponent(kw)}`,
-          jstor:`https://www.jstor.org/action/doBasicSearch?Query=${encodeURIComponent(kw)}`
-        };
-        window.open(urls[eng], '_blank');
-        lit_query.value='';
-      });
-
-      function showKiHintIfNeeded(){
-        const needsPaste = (ki_model.value==='openai' || ki_model.value==='copilot' || ki_model.value==='claude');
-        ki_hint.style.display = needsPaste ? 'block' : 'none';
-      }
-      ki_model.addEventListener('change', showKiHintIfNeeded);
-
-      ki_form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const prompt = ki_query.value.trim(); if(!prompt) return;
-        const model = ki_model.value;
-        const date = todayISO();
-        kiQueries.push({model, prompt, date});
-        localStorage.setItem('kiQueries', JSON.stringify(kiQueries));
-        updateKiTable(); bumpAndRedraw('ki');
-
-        // Weiterleitung
-        const urls = {
-          openai:     "https://chat.openai.com/",
-          copilot:    "https://copilot.microsoft.com/",
-          claude:     "https://claude.ai/new",
-          perplexity: "https://www.perplexity.ai/?q=" + encodeURIComponent(prompt)
-        };
-        if(model!=='perplexity'){
-          try{ await navigator.clipboard.writeText(prompt); }catch{}
-        }
-        window.open(urls[model], '_blank');
-        ki_query.value='';
-        showKiHintIfNeeded();
-      });
-
-      /* Klicks auf Domain-Links zählen (Tabelle) */
+      /* ---------- Click Events zählen ---------- */
       tableBody.addEventListener('click', (e)=>{
         const a = e.target.closest('a.domainLink');
         if(a){
           const d = a.getAttribute('data-domain');
           upsertDomainCount(d);
-          updateDomainTable(); bumpAndRedraw('domain');
-          return; // normaler Link öffnet in neuem Tab (target=_blank)
+          updateDomainTable(); updateTopLists(); updateRadar();
+          return;
         }
         const star = e.target.closest('.star');
         if(star){ toggleFavorite(star.getAttribute('data-domain')); }
       });
 
-      /* Klicks auf Favoriten zählen */
       favoritesBar.addEventListener('click', (e)=>{
-        const a = e.target.closest('a.favLink');
-        if(!a) return;
+        const a=e.target.closest('a.favLink'); if(!a) return;
         const domain = a.getAttribute('data-domain');
         upsertDomainCount(domain);
-        updateDomainTable(); bumpAndRedraw('domain');
+        updateDomainTable(); updateTopLists(); updateRadar();
       });
 
-      /* ---------- Initial ---------- */
+      /* ---------- Initial render ---------- */
       refreshFavoritesBar();
       updateDomainTable();
       updateLiteratureTable();
       updateKiTable();
       updateTopLists();
-      drawRadar();
-      showKiHintIfNeeded();
+      updateRadar();
+      updateKiHint();
     });
+
+    function layoutRadarArea() {
+      const area = document.querySelector('.radarArea');
+      const canvas = document.getElementById('radar');
+      const boxes = document.querySelectorAll('.topBox');
+      if (!area || !canvas) return;
+
+      // BoundingRects
+      const areaRect   = area.getBoundingClientRect();
+      const canvasRect = canvas.getBoundingClientRect();
+      let maxBottom = canvasRect.bottom;
+
+      boxes.forEach(b => {
+        const r = b.getBoundingClientRect();
+        if (r.bottom > maxBottom) maxBottom = r.bottom;
+      });
+
+      // 16px Luft unten
+      const needed = Math.ceil(maxBottom - areaRect.top + 16);
+
+      // Fixhöhe setzen (oder minHeight, wenn du anderen Content drunter hast)
+      area.style.height = needed + 'px';
+    }
+
   </script>
-
-
-  <footer>
-    <div class="container" onclick="window.location.href='https://datenflix007.github.io/';">© 2025 Felix Staacke</div>
-  </footer>
 </body>
 </html>
