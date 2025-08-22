@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --card:#0f1624;
+      --text:#d4d9e3;
+      --muted:#93a0b4;
+      --accent1:#7aa8ff;
+      --accent2:#a78bfa;
+      --radius:18px;
+      --shadow: 0 6px 30px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.03);
+      --ok:#38d39f;
+      --warn:#ffd166;
+      --danger:#ff7a7a;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background: radial-gradient(80% 120% at 10% 0%, #111b2d 0%, var(--bg) 40%) no-repeat fixed;
+    }
+    .shell{ max-width:1200px; margin:0 auto; padding: 28px 20px 60px; }
+    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand{ display:flex; align-items:center; gap:14px; font-weight:700; cursor:pointer; }
+    .brand .dot{ width:16px; height:16px; border-radius:8px; background:linear-gradient(135deg,var(--accent1),var(--accent2)); }
+    .card{ margin-top:10px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius: var(--radius); box-shadow: var(--shadow); padding:18px; }
+    .row{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+    label{ font-size:12px; color:#a6b1c2; font-weight:600; text-transform:uppercase; }
+    select,input[type="text"]{ appearance:none; border:none; outline:none; color:var(--text); background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); padding:12px 14px; border-radius:12px; }
+    button{ cursor:pointer; padding:12px 16px; border-radius:12px; border:1px solid rgba(255,255,255,.1); background: linear-gradient(135deg, var(--accent1), var(--accent2)); color:#0b0f17; font-weight:800; }
+
+    .stats{ margin-top:28px; }
+    table{ width:100%; border-collapse: collapse; background: rgba(255,255,255,.02); border-radius:12px; overflow:hidden; }
+    thead{ background: rgba(255,255,255,.04); }
+    th,td{ text-align:left; padding:12px 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
+
+    /* Favoriten-Leiste */
+    .favoritesBar{ margin:20px 0; display:flex; gap:10px; flex-wrap:wrap; }
+    .favoritesBar a{ text-decoration:none; color: var(--text); background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 12px; border-radius:999px; white-space:nowrap; }
+    .star{ cursor:pointer; font-size:18px; line-height:1; background:none; border:none; color:#9fb4ff; }
+    .star.on{ color:#ffd166; text-shadow:0 0 12px rgba(255,209,102,.35); }
+
+    /* Details: ohne Pfeile */
+    details{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:14px; margin-top:16px; }
+    summary{ cursor:pointer; font-weight:700; outline:none; }
+    summary::-webkit-details-marker{ display:none; }
+    summary::after{ content:""; } /* keine Pfeile */
+
+    /* Mini Kalender */
+    .calendarWrap{ display:none; align-items:flex-start; gap:16px; width:100%; }
+    .calendarPanel{ border:1px solid rgba(255,255,255,.08); border-radius:16px; background: rgba(255,255,255,.02); padding:12px; }
+    .calControls{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+    .calBtn{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 10px; border-radius:10px; cursor:pointer; }
+    .calSelect{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 10px; border-radius:10px; color:var(--text); }
+    .calendar{ display:grid; grid-template-columns:repeat(7, 34px); gap:6px; }
+    .dow{ font-size:11px; color:#a6b1c2; text-align:center; }
+    .day{ width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px; border:1px solid transparent; position:relative; cursor:pointer; }
+    .day.hasData::after{ content:""; position:absolute; bottom:4px; width:6px; height:6px; border-radius:3px; background: var(--ok); }
+    .day.selected{ border-color: var(--warn); box-shadow:0 0 0 2px rgba(255,209,102,.2) inset; }
+    .calLegend{ font-size:12px; color:#a6b1c2; min-width:180px; }
+
+    /* Toast + Hinweise */
+    .toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#0f1624; color:#d4d9e3; border:1px solid rgba(255,255,255,.1); padding:10px 14px; border-radius:10px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .toast.show{ opacity:1; }
+    .hint{ color: var(--danger); font-weight:700; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand" onclick="window.location.href='https://datenflix007.github.io/';">
+        <span class="dot"></span> Felix Staacke
+      </div>
+    </div>
+
+    <!-- Suche -->
+    <div class="card">
+      <div class="row">
+        <div class="control">
+          <label for="searchType">Art der Suche</label>
+          <select id="searchType">
+            <option value="">— auswählen —</option>
+            <option value="frei">Freisuche</option>
+            <option value="literatur">Literatursuche</option>
+            <option value="ki">KI-Anfrage</option>
+          </select>
+        </div>
+
+        <!-- Literatur -->
+        <div class="control" id="searchEngineGroup" style="display:none;">
+          <label for="engine_select">Suchmaschine / Datenbank</label>
+          <select id="engine_select">
+            <option value="google">Google</option>
+            <option value="thulb">ThulB</option>
+            <option value="jstor">JStor</option>
+          </select>
+        </div>
+        <div class="control" id="searchInputGroup" style="display:none;">
+          <label for="literature_input">Schlagwort</label>
+          <form id="literature_form" style="display:flex; gap:10px;">
+            <input type="text" id="literature_input" placeholder="z. B. Digital History" required />
+            <button type="submit">Suchen</button>
+          </form>
+        </div>
+
+        <!-- Freisuche -->
+        <div class="control" id="freisuche_input_group" style="position:relative; display:none; min-width: min(540px, 100%);">
+          <label for="freisuche_input">Webseite oder Suchbegriff</label>
+          <div class="row" style="gap:10px;">
+            <input type="text" id="freisuche_input" autocomplete="off" placeholder="z. B. wikipedia.org oder 'Römer'" style="flex:1; min-width:240px;" />
+            <button type="button" id="freisuche_submit">Start</button>
+          </div>
+          <div id="suggestionBox" class="suggestions" style="display:none;"></div>
+        </div>
+
+        <!-- KI -->
+        <div class="control" id="ki_group" style="display:none;">
+          <label for="ki_model_select">LLM-Modell</label>
+          <select id="ki_model_select">
+            <option value="openai">OpenAI (ChatGPT)</option>
+            <option value="copilot">Microsoft Copilot</option>
+            <option value="perplexity">Perplexity</option>
+            <option value="claude">Claude</option>
+          </select>
+          <div id="ki_hint" class="hint" style="display:none;">Prompt wird automatisch in die Zwischenablage kopiert. Mit <strong>Strg+V</strong> bei der KI einfügen.</div>
+        </div>
+        <div class="control" id="ki_prompt_group" style="display:none; min-width:min(540px,100%);">
+          <label for="ki_prompt_input">Prompt</label>
+          <form id="ki_form" style="display:flex; gap:10px;">
+            <input type="text" id="ki_prompt_input" placeholder="Frag die KI …" required />
+            <button type="submit">Anfragen</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Favoriten -->
+    <h3 style="margin-top:18px;">Favoriten</h3>
+    <div id="favoritesBar" class="favoritesBar"></div>
+
+    <!-- Nutzungsstatistik -->
+    <details open class="stats" id="stats">
+      <summary>Nutzungsstatistik</summary>
+      <div class="row" style="justify-content:space-between; align-items:flex-start; margin:12px 0;">
+        <div class="row" style="gap:10px; align-items:center;">
+          <label for="statsMode">Anzeigemodus</label>
+          <select id="statsMode">
+            <option value="all">Gesamt</option>
+            <option value="date">Nach Datum filtern</option>
+          </select>
+        </div>
+        <div id="calendarWrap" class="calendarWrap">
+          <div class="calendarPanel">
+            <div class="calControls">
+              <button id="prevMonth" class="calBtn" aria-label="vorheriger Monat">◀</button>
+              <div class="row" style="gap:8px;">
+                <select id="monthSelect" class="calSelect"></select>
+                <select id="yearSelect" class="calSelect"></select>
+              </div>
+              <button id="nextMonth" class="calBtn" aria-label="nächster Monat">▶</button>
+            </div>
+            <div id="calendar" class="calendar"></div>
+          </div>
+          <div class="calLegend">
+            <div>• <span style="color:var(--ok)">grün</span>: es gibt Daten</div>
+            <div>◼ <span style="color:var(--warn)">gelb</span>: ausgewählt</div>
+          </div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Domain</th><th>Anzahl Aufrufe</th></tr>
+        </thead>
+        <tbody id="countTableBody"></tbody>
+      </table>
+    </details>
+
+    <!-- Literatur -->
+    <details open class="stats" id="literatureStats">
+      <summary>Literaturrecherche-Statistik</summary>
+
+      <h4 style="margin: 10px 0 8px;">ThulB</h4>
+      <table>
+        <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
+        <tbody id="thulbTableBody"></tbody>
+      </table>
+
+      <h4 style="margin: 18px 0 8px;">JStor</h4>
+      <table>
+        <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
+        <tbody id="jstorTableBody"></tbody>
+      </table>
+
+      <h4 style="margin: 18px 0 8px;">Google</h4>
+      <table>
+        <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
+        <tbody id="googleTableBody"></tbody>
+      </table>
+    </details>
+
+    <!-- KI-Anfragen -->
+    <details open class="stats" id="kiStats">
+      <summary>KI-Anfragen</summary>
+      <table>
+        <thead><tr><th>Modell</th><th>Datum</th><th>Prompt</th></tr></thead>
+        <tbody id="kiTableBody"></tbody>
+      </table>
+    </details>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      /* --- DOM-Refs --- */
+      const searchTypeSelect  = document.getElementById("searchType");
+      const searchEngineGroup = document.getElementById("searchEngineGroup");
+      const searchInputGroup  = document.getElementById("searchInputGroup");
+      const freisucheInputGroup = document.getElementById("freisuche_input_group");
+      const kiGroup           = document.getElementById("ki_group");
+      const kiPromptGroup     = document.getElementById("ki_prompt_group");
+      const kiHint            = document.getElementById("ki_hint");
+
+      const literatureForm = document.getElementById("literature_form");
+      const literatureInput= document.getElementById("literature_input");
+      const engineSelect   = document.getElementById("engine_select");
+
+      const kiForm         = document.getElementById("ki_form");
+      const kiPromptInput  = document.getElementById("ki_prompt_input");
+      const kiModelSelect  = document.getElementById("ki_model_select");
+
+      const freisucheInput  = document.getElementById("freisuche_input");
+      const freisucheSubmit = document.getElementById("freisuche_submit");
+      const suggestionBox   = document.getElementById("suggestionBox");
+
+      const tableBody  = document.getElementById("countTableBody");
+      const modeSelect = document.getElementById("statsMode");
+
+      const thulbTableBody  = document.getElementById("thulbTableBody");
+      const jstorTableBody  = document.getElementById("jstorTableBody");
+      const googleTableBody = document.getElementById("googleTableBody");
+
+      const kiTableBody     = document.getElementById("kiTableBody");
+
+      const favoritesBar = document.getElementById('favoritesBar');
+
+      const calendarWrap = document.getElementById('calendarWrap');
+      const calendarEl   = document.getElementById('calendar');
+      const prevMonthBtn = document.getElementById('prevMonth');
+      const nextMonthBtn = document.getElementById('nextMonth');
+      const monthSelect  = document.getElementById('monthSelect');
+      const yearSelect   = document.getElementById('yearSelect');
+
+      const toast        = document.getElementById('toast');
+
+      /* --- Storage --- */
+      let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}");
+      let counters     = JSON.parse(localStorage.getItem("literaturCounters") || "{}");
+      let keywords     = JSON.parse(localStorage.getItem("literaturKeywords") || "{}");
+      let favorites    = JSON.parse(localStorage.getItem("favoritesDomains") || "[]");
+      let kiQueries    = JSON.parse(localStorage.getItem("kiQueries") || "[]");
+
+      function getCurrentDate() { return new Date().toISOString().split("T")[0]; }
+
+      /* --- UI Umschalten --- */
+      searchTypeSelect.addEventListener("change", function () {
+        const v = searchTypeSelect.value;
+        [searchEngineGroup, searchInputGroup, freisucheInputGroup, kiGroup, kiPromptGroup]
+          .forEach(el => el.style.display = "none");
+
+        if (v === "frei") {
+          freisucheInputGroup.style.display = "block";
+          freisucheInput.focus();
+        } else if (v === "literatur") {
+          searchEngineGroup.style.display = "block";
+          searchInputGroup.style.display  = "block";
+          literatureInput.focus();
+        } else if (v === "ki") {
+          kiGroup.style.display = "block";
+          kiPromptGroup.style.display = "block";
+          kiPromptInput.focus();
+        }
+      });
+
+      /* --- KI-Hinweis bei Modellauswahl --- */
+      function updateKiHint() {
+        const m = kiModelSelect.value;
+        const needsPaste = (m === 'openai' || m === 'copilot' || m === 'claude');
+        kiHint.style.display = needsPaste ? 'block' : 'none';
+      }
+      kiModelSelect.addEventListener('change', updateKiHint);
+      updateKiHint();
+
+      /* --- Freisuche mit Autocomplete --- */
+      function updateSuggestions(value){
+        const domains = Object.keys(siteCounters || {});
+        const matches = domains.filter(d=> d.toLowerCase().includes(value.toLowerCase())).slice(0,8);
+        if(!value || matches.length === 0){ suggestionBox.style.display='none'; return; }
+        suggestionBox.innerHTML = matches.map(m=>`<div data-value="${m}">${m}</div>`).join('');
+        suggestionBox.style.display='block';
+      }
+      freisucheInput.addEventListener('input', e=> updateSuggestions(e.target.value));
+      suggestionBox.addEventListener('click', (e)=>{
+        const el = e.target.closest('div[data-value]');
+        if(!el) return; freisucheInput.value = el.dataset.value; suggestionBox.style.display='none';
+      });
+      document.addEventListener('click', (e)=>{ if(!suggestionBox.contains(e.target)) suggestionBox.style.display='none'; });
+
+      function startFreisuche(){
+        const input = freisucheInput.value.trim();
+        if (!input) return;
+
+        let url = input, domain;
+        try { domain = new URL(input.startsWith("http") ? input : "https://" + input).hostname; }
+        catch { domain = input; }
+
+        const date = getCurrentDate();
+        if (!siteCounters[domain]) siteCounters[domain] = { count: 0, dates: [] };
+        siteCounters[domain].count += 1;
+        siteCounters[domain].dates.push(date);
+
+        localStorage.setItem("siteCounters", JSON.stringify(siteCounters));
+        updateFreitextTable(); refreshFavoritesBar(); rebuildCalendar();
+
+        const finalUrl = (domain === input)
+          ? `https://www.google.com/search?q=${encodeURIComponent(input)}`
+          : (url.startsWith('http') ? url : 'https://' + url);
+        window.open(finalUrl, "_blank");
+      }
+      freisucheSubmit.addEventListener("click", startFreisuche);
+      freisucheInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); startFreisuche(); } });
+
+      /* --- Literatur --- */
+      literatureForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const s = encodeURIComponent(literatureInput.value.trim());
+        const googleUrl = "https://www.google.com/search?q=" + s;
+        const thulbUrl  = "https://suche.thulb.uni-jena.de/Search/Results?lookfor=" + s;
+        const jstorUrl  = "https://www.jstor.org/action/doBasicSearch?Query=" + s;
+
+        const engine = engineSelect.value;
+        const date = getCurrentDate();
+
+        if (!counters[engine]) counters[engine] = [];
+        counters[engine].push({ date });
+
+        if (!keywords[engine]) keywords[engine] = [];
+        keywords[engine].push({ keyword: literatureInput.value.trim(), date });
+
+        localStorage.setItem("literaturCounters", JSON.stringify(counters));
+        localStorage.setItem("literaturKeywords", JSON.stringify(keywords));
+
+        if (engine === "google")      window.open(googleUrl, "_blank");
+        else if (engine === "thulb")  window.open(thulbUrl, "_blank");
+        else if (engine === "jstor")  window.open(jstorUrl, "_blank");
+
+        updateLiteratureTables(); rebuildCalendar();
+      });
+
+      /* --- KI-Anfragen --- */
+      kiForm.addEventListener("submit", async function(e){
+        e.preventDefault();
+        const model = kiModelSelect.value;
+        const prompt = kiPromptInput.value.trim();
+        if(!prompt) return;
+        const date = getCurrentDate();
+
+        kiQueries.push({ model, prompt, date });
+        localStorage.setItem("kiQueries", JSON.stringify(kiQueries));
+        updateKiTable(); rebuildCalendar();
+
+        const urls = {
+          openai:     "https://chat.openai.com/",
+          copilot:    "https://copilot.microsoft.com/",
+          claude:     "https://claude.ai/new",
+          perplexity: "https://www.perplexity.ai/?q=" + encodeURIComponent(prompt)
+        };
+        if(model !== "perplexity"){
+          try{
+            await navigator.clipboard.writeText(prompt);
+            showToast("Prompt in Zwischenablage. Im neuen Tab mit STRG+V einfügen.");
+          }catch{
+            showToast("Kopieren fehlgeschlagen. Bitte Prompt manuell kopieren.");
+          }
+        } else {
+          showToast("Perplexity mit vorbefülltem Prompt geöffnet.");
+        }
+        window.open(urls[model], "_blank");
+        kiPromptInput.value = "";
+      });
+
+      /* --- Favoriten --- */
+      function isFavorite(domain){ return favorites.includes(domain); }
+      function toggleFavorite(domain){
+        if(isFavorite(domain)) favorites = favorites.filter(d=> d!==domain);
+        else favorites.push(domain);
+        localStorage.setItem('favoritesDomains', JSON.stringify(favorites));
+        refreshFavoritesBar();
+        updateFreitextTable();
+      }
+      function refreshFavoritesBar(){
+        favoritesBar.innerHTML = favorites.map(d=>`<a href="https://${d}" target="_blank" rel="noopener">${d}</a>`).join('');
+        favoritesBar.style.display = favorites.length ? 'flex' : 'none';
+      }
+
+      /* --- Tabellenaufbau --- */
+      function updateFreitextTable() {
+        tableBody.innerHTML = "";
+        const mode = modeSelect.value;
+
+        // optional: ausgewähltes Datum aus Kalender nehmen
+        const filterDate = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+
+        for (let domain in siteCounters) {
+          const { count, dates } = siteCounters[domain];
+          let shownCount = count;
+          if (mode === "date" && filterDate) shownCount = dates.filter(d => d === filterDate).length;
+          if (shownCount > 0) {
+            const favOn = isFavorite(domain);
+            const row = document.createElement("tr");
+            row.innerHTML =
+              `<td data-domain="${domain}">${domain}</td>` +
+              `<td style="display:flex; justify-content:space-between; align-items:center;">` +
+                `<span>${shownCount}</span>` +
+                `<button class="star ${favOn ? 'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn ? '★' : '☆'}</button>` +
+              `</td>`;
+            tableBody.appendChild(row);
+          }
+        }
+      }
+      function updateLiteratureTables() {
+        thulbTableBody.innerHTML = ""; jstorTableBody.innerHTML = ""; googleTableBody.innerHTML = "";
+        const mode = modeSelect.value; 
+        const filterDate = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+
+        function fill(engine, body, label){
+          if (!keywords[engine]) return;
+          const arr = (mode === 'date' && filterDate) ? keywords[engine].filter(e=>e.date===filterDate) : keywords[engine];
+          const count = arr.length; const kws = arr.map(e=>e.keyword).join(', ');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${label}</td><td>${count}</td><td>${kws}</td>`; body.appendChild(tr);
+        }
+        fill('thulb', thulbTableBody, 'ThulB');
+        fill('jstor', jstorTableBody, 'JStor');
+        fill('google', googleTableBody, 'Google');
+      }
+      function updateKiTable(){
+        kiTableBody.innerHTML = "";
+        const mode = modeSelect.value; 
+        const filterDate = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+        kiQueries
+          .filter(q => mode !== "date" || !filterDate || q.date === filterDate)
+          .slice().reverse()
+          .forEach(({model, date, prompt})=>{
+            const tr = document.createElement('tr');
+            const label = ({openai:"OpenAI (ChatGPT)", copilot:"Copilot", perplexity:"Perplexity", claude:"Claude"})[model] || model;
+            tr.innerHTML = `<td>${label}</td><td>${date}</td><td>${prompt}</td>`;
+            kiTableBody.appendChild(tr);
+          });
+      }
+
+      /* --- Filter/Calendar --- */
+      modeSelect.addEventListener("change", function () {
+        const dateMode = (this.value === "date");
+        calendarWrap.style.display = dateMode ? "flex" : "none";
+        updateFreitextTable(); updateLiteratureTables(); updateKiTable(); rebuildCalendar();
+      });
+
+      // Kalender-State
+      let viewYear, viewMonth; // 0-basiert
+      let selectedDate = null;
+
+      function initMonthYear() {
+        const now = new Date();
+        viewYear = now.getFullYear();
+        viewMonth = now.getMonth();
+        selectedDate = null;
+        // Month select
+        const months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+        monthSelect.innerHTML = months.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+        // Year select (letzte 10, nächste 3)
+        const ys=[]; for(let y=now.getFullYear()-10; y<=now.getFullYear()+3; y++) ys.push(y);
+        yearSelect.innerHTML = ys.map(y=>`<option value="${y}">${y}</option>`).join('');
+        monthSelect.value = String(viewMonth);
+        yearSelect.value = String(viewYear);
+      }
+
+      prevMonthBtn.addEventListener('click', ()=>{ viewMonth--; if(viewMonth<0){ viewMonth=11; viewYear--; } syncSelectors(); rebuildCalendar(); });
+      nextMonthBtn.addEventListener('click', ()=>{ viewMonth++; if(viewMonth>11){ viewMonth=0; viewYear++; } syncSelectors(); rebuildCalendar(); });
+      monthSelect.addEventListener('change', ()=>{ viewMonth = parseInt(monthSelect.value,10); rebuildCalendar(); });
+      yearSelect.addEventListener('change', ()=>{ viewYear = parseInt(yearSelect.value,10); rebuildCalendar(); });
+
+      function syncSelectors(){ monthSelect.value=String(viewMonth); yearSelect.value=String(viewYear); }
+
+      function rebuildCalendar(){
+        if(modeSelect.value !== "date"){ calendarEl.innerHTML = ""; return; }
+        calendarEl.innerHTML = "";
+
+        const first = new Date(viewYear, viewMonth, 1);
+        const startDow = (first.getDay()+6)%7; // Mo=0
+        const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+        const grid = [];
+        // Kopf der Wochentage
+        ["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(d=> grid.push(`<div class="dow">${d}</div>`));
+        // leere Zellen
+        for(let i=0;i<startDow;i++) grid.push(`<div></div>`);
+        // Set aktive Tage
+        const activeDays = new Set();
+        // Domains
+        Object.values(siteCounters).forEach(v => (v.dates||[]).forEach(d => markDay(d)));
+        // Literatur
+        Object.values(keywords).flat().forEach(e => markDay(e.date));
+        // KI
+        kiQueries.forEach(q => markDay(q.date));
+
+        function markDay(iso){
+          if(!iso) return;
+          const [yy,mm,dd]=iso.split("-").map(n=>parseInt(n,10));
+          if(yy===viewYear && (mm-1)===viewMonth) activeDays.add(dd);
+        }
+
+        const selectedDay = selectedDate && selectedDate.getFullYear()===viewYear && selectedDate.getMonth()===viewMonth
+          ? selectedDate.getDate() : null;
+
+        for(let d=1; d<=daysInMonth; d++){
+          const has = activeDays.has(d), sel = (selectedDay===d);
+          grid.push(`<div class="day ${has?"hasData":""} ${sel?"selected":""}" data-day="${d}">${d}</div>`);
+        }
+        calendarEl.innerHTML = grid.join("");
+
+        // Klickhandler
+        calendarEl.querySelectorAll('.day').forEach(el=>{
+          if(!el.dataset.day) return;
+          el.addEventListener('click', ()=>{
+            selectedDate = new Date(viewYear, viewMonth, parseInt(el.dataset.day,10));
+            updateFreitextTable(); updateLiteratureTables(); updateKiTable(); rebuildCalendar();
+          });
+        });
+      }
+
+      /* --- Table Interactions --- */
+      tableBody.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.star');
+        if(!btn) return;
+        const domain = btn.getAttribute('data-domain');
+        toggleFavorite(domain);
+      });
+
+      /* --- Toast --- */
+      let toastTimer=null;
+      function showToast(msg){
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(()=> toast.classList.remove('show'), 2500);
+      }
+
+      /* --- Initialisierung --- */
+      refreshFavoritesBar();
+      updateKiTable();
+      updateLiteratureTables();
+      updateFreitextTable();
+
+      initMonthYear();
+      rebuildCalendar();
+    });
+  </script>
+</body>
+</html>
