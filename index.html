@@ -55,7 +55,7 @@
     summary::-webkit-details-marker{ display:none; }
     summary::after{ content:""; } /* keine Pfeile */
 
-    /* Mini Kalender */
+    /* Kalender */
     .calendarWrap{ display:none; align-items:flex-start; gap:16px; width:100%; }
     .calendarPanel{ border:1px solid rgba(255,255,255,.08); border-radius:16px; background: rgba(255,255,255,.02); padding:12px; }
     .calControls{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
@@ -269,7 +269,12 @@
       let favorites    = JSON.parse(localStorage.getItem("favoritesDomains") || "[]");
       let kiQueries    = JSON.parse(localStorage.getItem("kiQueries") || "[]");
 
-      function getCurrentDate() { return new Date().toISOString().split("T")[0]; }
+      /* ---- Date helpers: immer LOKAL formatieren ---- */
+      const pad2 = n => String(n).padStart(2,'0');
+      const localISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      const todayLocalISO = () => localISO(new Date());
+
+      function getCurrentDate() { return todayLocalISO(); }
 
       /* --- UI Umschalten --- */
       searchTypeSelect.addEventListener("change", function () {
@@ -412,18 +417,18 @@
         favoritesBar.style.display = favorites.length ? 'flex' : 'none';
       }
 
-      /* --- Tabellenaufbau --- */
+      /* --- Tabellenaufbau (mit robustem Datumsfilter) --- */
+      function getFilterDate() {
+        return (modeSelect.value === 'date' && selectedDate) ? localISO(selectedDate) : null;
+      }
+
       function updateFreitextTable() {
         tableBody.innerHTML = "";
-        const mode = modeSelect.value;
-
-        // optional: ausgewähltes Datum aus Kalender nehmen
-        const filterDate = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+        const filterDate = getFilterDate();
 
         for (let domain in siteCounters) {
-          const { count, dates } = siteCounters[domain];
-          let shownCount = count;
-          if (mode === "date" && filterDate) shownCount = dates.filter(d => d === filterDate).length;
+          const { count, dates=[] } = siteCounters[domain];
+          const shownCount = filterDate ? dates.filter(d => d === filterDate).length : count;
           if (shownCount > 0) {
             const favOn = isFavorite(domain);
             const row = document.createElement("tr");
@@ -437,28 +442,30 @@
           }
         }
       }
+
       function updateLiteratureTables() {
         thulbTableBody.innerHTML = ""; jstorTableBody.innerHTML = ""; googleTableBody.innerHTML = "";
-        const mode = modeSelect.value; 
-        const filterDate = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+        const filterDate = getFilterDate();
 
         function fill(engine, body, label){
-          if (!keywords[engine]) return;
-          const arr = (mode === 'date' && filterDate) ? keywords[engine].filter(e=>e.date===filterDate) : keywords[engine];
-          const count = arr.length; const kws = arr.map(e=>e.keyword).join(', ');
+          const list = keywords[engine] || [];
+          const arr  = filterDate ? list.filter(e=> e.date === filterDate) : list;
+          const count = arr.length;
+          const kws = arr.map(e=>e.keyword).join(', ');
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${label}</td><td>${count}</td><td>${kws}</td>`; body.appendChild(tr);
+          tr.innerHTML = `<td>${label}</td><td>${count}</td><td>${kws}</td>`;
+          body.appendChild(tr);
         }
         fill('thulb', thulbTableBody, 'ThulB');
         fill('jstor', jstorTableBody, 'JStor');
         fill('google', googleTableBody, 'Google');
       }
+
       function updateKiTable(){
         kiTableBody.innerHTML = "";
-        const mode = modeSelect.value; 
-        const filterDate = selectedDate ? selectedDate.toISOString().split("T")[0] : "";
+        const filterDate = getFilterDate();
         kiQueries
-          .filter(q => mode !== "date" || !filterDate || q.date === filterDate)
+          .filter(q => !filterDate || q.date === filterDate)
           .slice().reverse()
           .forEach(({model, date, prompt})=>{
             const tr = document.createElement('tr');
@@ -484,12 +491,13 @@
         viewYear = now.getFullYear();
         viewMonth = now.getMonth();
         selectedDate = null;
-        // Month select
+
         const months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
         monthSelect.innerHTML = months.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
-        // Year select (letzte 10, nächste 3)
+
         const ys=[]; for(let y=now.getFullYear()-10; y<=now.getFullYear()+3; y++) ys.push(y);
         yearSelect.innerHTML = ys.map(y=>`<option value="${y}">${y}</option>`).join('');
+
         monthSelect.value = String(viewMonth);
         yearSelect.value = String(viewYear);
       }
@@ -510,24 +518,21 @@
         const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
 
         const grid = [];
-        // Kopf der Wochentage
         ["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(d=> grid.push(`<div class="dow">${d}</div>`));
-        // leere Zellen
         for(let i=0;i<startDow;i++) grid.push(`<div></div>`);
-        // Set aktive Tage
-        const activeDays = new Set();
-        // Domains
-        Object.values(siteCounters).forEach(v => (v.dates||[]).forEach(d => markDay(d)));
-        // Literatur
-        Object.values(keywords).flat().forEach(e => markDay(e.date));
-        // KI
-        kiQueries.forEach(q => markDay(q.date));
 
-        function markDay(iso){
+        const activeDays = new Set();
+        const markDay = iso => {
           if(!iso) return;
           const [yy,mm,dd]=iso.split("-").map(n=>parseInt(n,10));
           if(yy===viewYear && (mm-1)===viewMonth) activeDays.add(dd);
-        }
+        };
+        // Domains
+        Object.values(siteCounters).forEach(v => (v.dates||[]).forEach(markDay));
+        // Literatur
+        Object.values(keywords).forEach(arr => (arr||[]).forEach(e=> markDay(e.date)));
+        // KI
+        kiQueries.forEach(q => markDay(q.date));
 
         const selectedDay = selectedDate && selectedDate.getFullYear()===viewYear && selectedDate.getMonth()===viewMonth
           ? selectedDate.getDate() : null;
