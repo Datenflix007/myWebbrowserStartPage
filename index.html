@@ -46,39 +46,29 @@
     /* Favoriten-Leiste */
     .favoritesBar{ margin:20px 0; display:flex; gap:10px; flex-wrap:wrap; }
     .favoritesBar a{ text-decoration:none; color: var(--text); background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 12px; border-radius:999px; white-space:nowrap; }
+
     .star{ cursor:pointer; font-size:18px; line-height:1; background:none; border:none; color:#9fb4ff; }
     .star.on{ color:#ffd166; text-shadow:0 0 12px rgba(255,209,102,.35); }
 
-    /* Details: ohne Pfeile */
-    details{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:14px; margin-top:16px; }
-    summary{ cursor:pointer; font-weight:700; outline:none; }
-    summary::-webkit-details-marker{ display:none; }
-    summary::after{ content:""; } /* keine Pfeile */
+    /* Radar + Top5 */
+    .radarWrap{ margin:18px 0 8px; display:grid; grid-template-columns: 420px 1fr; gap:24px; align-items:center; }
+    .radarCard{ background: rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:16px; }
+    .legend{ font-size:12px; color:#a6b1c2; margin-top:8px; }
+    .topCols{ display:grid; grid-template-columns: repeat(3,1fr); gap:14px; }
+    .topCols h4{ margin:0 0 6px; font-size:14px; color:#cfe3ff; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); margin:4px 6px 0 0; font-size:12px; }
+    .pill .cnt{ font-weight:700; color:#cfe3ff; }
 
-    /* Kalender */
-    .calendarWrap{ display:none; align-items:flex-start; gap:16px; width:100%; }
-    .calendarPanel{ border:1px solid rgba(255,255,255,.08); border-radius:16px; background: rgba(255,255,255,.02); padding:12px; }
-    .calControls{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
-    .calBtn{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 10px; border-radius:10px; cursor:pointer; }
-    .calSelect{ background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 10px; border-radius:10px; color:var(--text); }
-    .calendar{ display:grid; grid-template-columns:repeat(7, 34px); gap:6px; }
-    .dow{ font-size:11px; color:#a6b1c2; text-align:center; }
-    .day{ width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:12px; border:1px solid transparent; position:relative; cursor:pointer; }
-    .day.hasData::after{ content:""; position:absolute; bottom:4px; width:6px; height:6px; border-radius:3px; background: var(--ok); }
-    .day.selected{ border-color: var(--warn); box-shadow:0 0 0 2px rgba(255,209,102,.2) inset; }
-    .calLegend{ font-size:12px; color:#a6b1c2; min-width:180px; }
-
-    /* Toast + Hinweise */
-    .toast{ position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#0f1624; color:#d4d9e3; border:1px solid rgba(255,255,255,.1); padding:10px 14px; border-radius:10px; box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s ease; }
-    .toast.show{ opacity:1; }
-    .hint{ color: var(--danger); font-weight:700; margin-top:6px; }
+    @media (max-width: 900px){
+      .radarWrap{ grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
   <div class="shell">
     <div class="topbar">
       <div class="brand" onclick="window.location.href='https://datenflix007.github.io/';">
-        <span class="dot"></span> Felix Staacke
+        
       </div>
     </div>
 
@@ -95,50 +85,51 @@
           </select>
         </div>
 
+        <!-- Freisuche -->
+        <div class="control" id="freisuche_group" style="display:none;">
+          <label for="free_input">URL oder Suchbegriff</label>
+          <form id="free_form" class="row">
+            <input id="free_input" type="text" placeholder="z. B. wikipedia.org oder 'Römer'"/>
+            <button>Los</button>
+          </form>
+        </div>
+
         <!-- Literatur -->
-        <div class="control" id="searchEngineGroup" style="display:none;">
-          <label for="engine_select">Suchmaschine / Datenbank</label>
-          <select id="engine_select">
+        <div class="control" id="lit_group" style="display:none;">
+          <label for="lit_engine">Datenbank</label>
+          <select id="lit_engine">
             <option value="google">Google</option>
             <option value="thulb">ThulB</option>
             <option value="jstor">JStor</option>
           </select>
         </div>
-        <div class="control" id="searchInputGroup" style="display:none;">
-          <label for="literature_input">Schlagwort</label>
-          <form id="literature_form" style="display:flex; gap:10px;">
-            <input type="text" id="literature_input" placeholder="z. B. Digital History" required />
-            <button type="submit">Suchen</button>
+        <div class="control" id="lit_query_group" style="display:none;">
+          <label for="lit_query">Schlagwort</label>
+          <form id="lit_form" class="row">
+            <input id="lit_query" type="text" placeholder="Digital History, ..." />
+            <button>Suchen</button>
           </form>
-        </div>
-
-        <!-- Freisuche -->
-        <div class="control" id="freisuche_input_group" style="position:relative; display:none; min-width: min(540px, 100%);">
-          <label for="freisuche_input">Webseite oder Suchbegriff</label>
-          <div class="row" style="gap:10px;">
-            <input type="text" id="freisuche_input" autocomplete="off" placeholder="z. B. wikipedia.org oder 'Römer'" style="flex:1; min-width:240px;" />
-            <button type="button" id="freisuche_submit">Start</button>
-          </div>
-          <div id="suggestionBox" class="suggestions" style="display:none;"></div>
         </div>
 
         <!-- KI -->
         <div class="control" id="ki_group" style="display:none;">
-          <label for="ki_model_select">LLM-Modell</label>
-          <select id="ki_model_select">
+          <label for="ki_model">LLM-Modell</label>
+          <select id="ki_model">
             <option value="openai">OpenAI (ChatGPT)</option>
-            <option value="copilot">Microsoft Copilot</option>
+            <option value="copilot">Copilot</option>
             <option value="perplexity">Perplexity</option>
             <option value="claude">Claude</option>
           </select>
-          <div id="ki_hint" class="hint" style="display:none;">Prompt wird automatisch in die Zwischenablage kopiert. Mit <strong>Strg+V</strong> bei der KI einfügen.</div>
         </div>
-        <div class="control" id="ki_prompt_group" style="display:none; min-width:min(540px,100%);">
-          <label for="ki_prompt_input">Prompt</label>
-          <form id="ki_form" style="display:flex; gap:10px;">
-            <input type="text" id="ki_prompt_input" placeholder="Frag die KI …" required />
-            <button type="submit">Anfragen</button>
+        <div class="control" id="ki_query_group" style="display:none;">
+          <label for="ki_query">Prompt</label>
+          <form id="ki_form" class="row">
+            <input id="ki_query" type="text" placeholder="Frag die KI …" />
+            <button>Anfragen</button>
           </form>
+          <div id="ki_hint" style="display:none; margin-top:6px; color:#ff9e9e; font-weight:700;">
+            Prompt ist in der Zwischenablage – bei der KI mit <strong>Strg+V</strong> einfügen.
+          </div>
         </div>
       </div>
     </div>
@@ -147,438 +138,378 @@
     <h3 style="margin-top:18px;">Favoriten</h3>
     <div id="favoritesBar" class="favoritesBar"></div>
 
-    <!-- Nutzungsstatistik -->
-    <details open class="stats" id="stats">
-      <summary>Nutzungsstatistik</summary>
-      <div class="row" style="justify-content:space-between; align-items:flex-start; margin:12px 0;">
-        <div class="row" style="gap:10px; align-items:center;">
-          <label for="statsMode">Anzeigemodus</label>
-          <select id="statsMode">
-            <option value="all">Gesamt</option>
-            <option value="date">Nach Datum filtern</option>
-          </select>
+    <!-- Radar + Top 5 -->
+    <div class="radarWrap">
+      <div class="radarCard">
+        <canvas id="radar" width="380" height="380"></canvas>
+        <div class="legend">Netzdiagramm: Domänen • Literatur • KI — jeder neue Vorgang schlägt die jeweilige Achse um 1 aus.</div>
+      </div>
+      <div class="topCols">
+        <div>
+          <h4>Top 5 Domains</h4>
+          <div id="topDomains"></div>
         </div>
-        <div id="calendarWrap" class="calendarWrap">
-          <div class="calendarPanel">
-            <div class="calControls">
-              <button id="prevMonth" class="calBtn" aria-label="vorheriger Monat">◀</button>
-              <div class="row" style="gap:8px;">
-                <select id="monthSelect" class="calSelect"></select>
-                <select id="yearSelect" class="calSelect"></select>
-              </div>
-              <button id="nextMonth" class="calBtn" aria-label="nächster Monat">▶</button>
-            </div>
-            <div id="calendar" class="calendar"></div>
-          </div>
-          <div class="calLegend">
-            <div>• <span style="color:var(--ok)">grün</span>: es gibt Daten</div>
-            <div>◼ <span style="color:var(--warn)">gelb</span>: ausgewählt</div>
-          </div>
+        <div>
+          <h4>Top 5 Literatur</h4>
+          <div id="topLit"></div>
+        </div>
+        <div>
+          <h4>Top 5 KI-Prompts</h4>
+          <div id="topKI"></div>
         </div>
       </div>
+    </div>
+
+    <!-- Nutzungsstatistik -->
+    <section class="stats" id="stats">
+      <h3>Nutzungsstatistik</h3>
       <table>
         <thead>
-          <tr><th>Domain</th><th>Anzahl Aufrufe</th></tr>
+          <tr><th>Domain</th><th>Anzahl Aufrufe</th><th>Favorit</th></tr>
         </thead>
         <tbody id="countTableBody"></tbody>
       </table>
-    </details>
+    </section>
 
     <!-- Literatur -->
-    <details open class="stats" id="literatureStats">
-      <summary>Literaturrecherche-Statistik</summary>
-
-      <h4 style="margin: 10px 0 8px;">ThulB</h4>
+    <section class="stats">
+      <h3>Literaturrecherche-Statistik</h3>
       <table>
         <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
-        <tbody id="thulbTableBody"></tbody>
+        <tbody id="litTableBody"></tbody>
       </table>
+    </section>
 
-      <h4 style="margin: 18px 0 8px;">JStor</h4>
-      <table>
-        <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
-        <tbody id="jstorTableBody"></tbody>
-      </table>
-
-      <h4 style="margin: 18px 0 8px;">Google</h4>
-      <table>
-        <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
-        <tbody id="googleTableBody"></tbody>
-      </table>
-    </details>
-
-    <!-- KI-Anfragen -->
-    <details open class="stats" id="kiStats">
-      <summary>KI-Anfragen</summary>
+    <!-- KI -->
+    <section class="stats">
+      <h3>KI-Anfragen</h3>
       <table>
         <thead><tr><th>Modell</th><th>Datum</th><th>Prompt</th></tr></thead>
         <tbody id="kiTableBody"></tbody>
       </table>
-    </details>
+    </section>
   </div>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      /* --- DOM-Refs --- */
-      const searchTypeSelect  = document.getElementById("searchType");
-      const searchEngineGroup = document.getElementById("searchEngineGroup");
-      const searchInputGroup  = document.getElementById("searchInputGroup");
-      const freisucheInputGroup = document.getElementById("freisuche_input_group");
-      const kiGroup           = document.getElementById("ki_group");
-      const kiPromptGroup     = document.getElementById("ki_prompt_group");
-      const kiHint            = document.getElementById("ki_hint");
+      /* ---------- DOM ---------- */
+      const searchType = document.getElementById('searchType');
+      const free_group = document.getElementById('freisuche_group');
+      const free_form  = document.getElementById('free_form');
+      const free_input = document.getElementById('free_input');
 
-      const literatureForm = document.getElementById("literature_form");
-      const literatureInput= document.getElementById("literature_input");
-      const engineSelect   = document.getElementById("engine_select");
+      const lit_group = document.getElementById('lit_group');
+      const lit_engine = document.getElementById('lit_engine');
+      const lit_query_group = document.getElementById('lit_query_group');
+      const lit_form = document.getElementById('lit_form');
+      const lit_query = document.getElementById('lit_query');
 
-      const kiForm         = document.getElementById("ki_form");
-      const kiPromptInput  = document.getElementById("ki_prompt_input");
-      const kiModelSelect  = document.getElementById("ki_model_select");
+      const ki_group = document.getElementById('ki_group');
+      const ki_model = document.getElementById('ki_model');
+      const ki_query_group = document.getElementById('ki_query_group');
+      const ki_form = document.getElementById('ki_form');
+      const ki_query = document.getElementById('ki_query');
+      const ki_hint  = document.getElementById('ki_hint');
 
-      const freisucheInput  = document.getElementById("freisuche_input");
-      const freisucheSubmit = document.getElementById("freisuche_submit");
-      const suggestionBox   = document.getElementById("suggestionBox");
+      const tableBody = document.getElementById("countTableBody");
+      const litTableBody = document.getElementById("litTableBody");
+      const kiTableBody = document.getElementById("kiTableBody");
+      const favoritesBar = document.getElementById("favoritesBar");
 
-      const tableBody  = document.getElementById("countTableBody");
-      const modeSelect = document.getElementById("statsMode");
+      const radarCanvas = document.getElementById('radar');
+      const ctx = radarCanvas.getContext('2d');
 
-      const thulbTableBody  = document.getElementById("thulbTableBody");
-      const jstorTableBody  = document.getElementById("jstorTableBody");
-      const googleTableBody = document.getElementById("googleTableBody");
+      const topDomainsEl = document.getElementById('topDomains');
+      const topLitEl = document.getElementById('topLit');
+      const topKIEl = document.getElementById('topKI');
 
-      const kiTableBody     = document.getElementById("kiTableBody");
+      /* ---------- Storage ---------- */
+      let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}");             // {domain: {count, dates[]}}
+      let favorites    = JSON.parse(localStorage.getItem("favoritesDomains") || "[]");         // [domain]
+      let literatur    = JSON.parse(localStorage.getItem("literaturKeywords") || "{}");        // {engine: [{keyword,date}]}
+      let kiQueries    = JSON.parse(localStorage.getItem("kiQueries") || "[]");                // [{model,prompt,date}]
 
-      const favoritesBar = document.getElementById('favoritesBar');
+      /* ---------- Helpers ---------- */
+      const pad2 = (n)=> String(n).padStart(2,'0');
+      const todayISO = ()=> {
+        const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      };
+      function ensure(obj, key, def){ if(!obj[key]) obj[key]=def; return obj[key]; }
 
-      const calendarWrap = document.getElementById('calendarWrap');
-      const calendarEl   = document.getElementById('calendar');
-      const prevMonthBtn = document.getElementById('prevMonth');
-      const nextMonthBtn = document.getElementById('nextMonth');
-      const monthSelect  = document.getElementById('monthSelect');
-      const yearSelect   = document.getElementById('yearSelect');
+      function isFavorite(domain){ return favorites.includes(domain); }
+      function toggleFavorite(domain){
+        if(isFavorite(domain)) favorites = favorites.filter(d=> d!==domain);
+        else favorites.push(domain);
+        localStorage.setItem('favoritesDomains', JSON.stringify(favorites));
+        refreshFavoritesBar(); updateDomainTable(); updateTopLists();
+      }
 
-      const toast        = document.getElementById('toast');
+      function upsertDomainCount(domain){
+        const entry = ensure(siteCounters, domain, {count:0, dates:[]});
+        entry.count += 1; entry.dates.push(todayISO());
+        localStorage.setItem("siteCounters", JSON.stringify(siteCounters));
+      }
 
-      /* --- Storage --- */
-      let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}");
-      let counters     = JSON.parse(localStorage.getItem("literaturCounters") || "{}");
-      let keywords     = JSON.parse(localStorage.getItem("literaturKeywords") || "{}");
-      let favorites    = JSON.parse(localStorage.getItem("favoritesDomains") || "[]");
-      let kiQueries    = JSON.parse(localStorage.getItem("kiQueries") || "[]");
+      function refreshFavoritesBar(){
+        favoritesBar.innerHTML = favorites
+          .map(d=>`<a class="favLink" data-domain="${d}" href="https://${d}" target="_blank" rel="noopener">${d}</a>`)
+          .join('');
+      }
 
-      /* ---- Date helpers: immer LOKAL formatieren ---- */
-      const pad2 = n => String(n).padStart(2,'0');
-      const localISO = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-      const todayLocalISO = () => localISO(new Date());
-
-      function getCurrentDate() { return todayLocalISO(); }
-
-      /* --- UI Umschalten --- */
-      searchTypeSelect.addEventListener("change", function () {
-        const v = searchTypeSelect.value;
-        [searchEngineGroup, searchInputGroup, freisucheInputGroup, kiGroup, kiPromptGroup]
-          .forEach(el => el.style.display = "none");
-
-        if (v === "frei") {
-          freisucheInputGroup.style.display = "block";
-          freisucheInput.focus();
-        } else if (v === "literatur") {
-          searchEngineGroup.style.display = "block";
-          searchInputGroup.style.display  = "block";
-          literatureInput.focus();
-        } else if (v === "ki") {
-          kiGroup.style.display = "block";
-          kiPromptGroup.style.display = "block";
-          kiPromptInput.focus();
+      function updateDomainTable(){
+        tableBody.innerHTML = "";
+        // sort by count desc
+        const rows = Object.entries(siteCounters)
+          .sort((a,b)=>b[1].count - a[1].count);
+        for(const [domain, {count}] of rows){
+          const favOn = isFavorite(domain);
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            `<td><a class="domainLink" style="color: white;" data-domain="${domain}" href="https://${domain}" target="_blank" rel="noopener">${domain}</a></td>` +
+            `<td>${count}</td>` +
+            `<td style="width:70px; text-align:center;">` +
+              `<button class="star ${favOn?'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn?'★':'☆'}</button>` +
+            `</td>`;
+          tableBody.appendChild(tr);
         }
+      }
+
+      function updateLiteratureTable(){
+        litTableBody.innerHTML = "";
+        const engines = ["thulb","jstor","google"];
+        for(const eng of engines){
+          const arr = literatur[eng] || [];
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${eng.charAt(0).toUpperCase()+eng.slice(1)}</td>`+
+                         `<td>${arr.length}</td>`+
+                         `<td>${arr.map(e=>e.keyword).join(', ')}</td>`;
+          litTableBody.appendChild(tr);
+        }
+      }
+
+      function updateKiTable(){
+        kiTableBody.innerHTML = "";
+        kiQueries.slice().reverse().forEach(({model,date,prompt})=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${({openai:"OpenAI",copilot:"Copilot",perplexity:"Perplexity",claude:"Claude"})[model]||model}</td>`+
+                         `<td>${date}</td><td>${prompt}</td>`;
+          kiTableBody.appendChild(tr);
+        });
+      }
+
+      /* ---------- Top 5 ---------- */
+      function renderPills(el, arr){ // arr: [{label,count}]
+        el.innerHTML = arr.slice(0,5).map(x => `<span class="pill"><span>${x.label}</span><span class="cnt">${x.count}</span></span>`).join('');
+      }
+      function updateTopLists(){
+        // Domains
+        const dom = Object.entries(siteCounters).map(([d,v])=>({label:d, count:v.count}))
+          .sort((a,b)=>b.count-a.count);
+        renderPills(topDomainsEl, dom);
+
+        // Literatur (über alle Engines)
+        const litMap = {};
+        Object.values(literatur||{}).flat().forEach(({keyword})=>{
+          litMap[keyword]=(litMap[keyword]||0)+1;
+        });
+        const litArr = Object.entries(litMap).map(([k,c])=>({label:k, count:c})).sort((a,b)=>b.count-a.count);
+        renderPills(topLitEl, litArr);
+
+        // KI Prompts
+        const kiMap = {};
+        kiQueries.forEach(q=>{ kiMap[q.prompt]=(kiMap[q.prompt]||0)+1; });
+        const kiArr = Object.entries(kiMap).map(([p,c])=>({label:p, count:c})).sort((a,b)=>b.count-a.count);
+        renderPills(topKIEl, kiArr);
+      }
+
+      /* ---------- Radar ---------- */
+      function totalDomains(){ return Object.values(siteCounters).reduce((s,v)=>s+v.count,0); }
+      function totalLiterature(){ return Object.values(literatur||{}).reduce((s,arr)=>s+arr.length,0); }
+      function totalKI(){ return (kiQueries||[]).length; }
+
+      function drawRadar(){
+        const w = radarCanvas.width, h = radarCanvas.height;
+        ctx.clearRect(0,0,w,h);
+        const cx=w/2, cy=h/2, R=Math.min(w,h)/2 - 18;
+
+        const vals = [totalDomains(), totalLiterature(), totalKI()];
+        const maxVal = Math.max(5, ...vals); // nie 0
+        const labels = ["Domains","Literatur","KI"];
+
+        // Grid (5 Ringe)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,.15)';
+        ctx.setLineDash([4,6]);
+        for(let i=1;i<=5;i++){
+          const r = R*i/5;
+          ctx.beginPath();
+          for(let a=0;a<3;a++){
+            const ang = -Math.PI/2 + a*2*Math.PI/3;
+            const x = cx + r*Math.cos(ang);
+            const y = cy + r*Math.sin(ang);
+            if(a===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.closePath(); ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        // Achsen
+        ctx.beginPath();
+        for(let a=0;a<3;a++){
+          const ang = -Math.PI/2 + a*2*Math.PI/3;
+          ctx.moveTo(cx,cy);
+          ctx.lineTo(cx + R*Math.cos(ang), cy + R*Math.sin(ang));
+        }
+        ctx.stroke();
+
+        // Labels
+        ctx.fillStyle = 'rgba(255,255,255,.8)';
+        ctx.font = '12px Inter, sans-serif';
+        for(let a=0;a<3;a++){
+          const ang = -Math.PI/2 + a*2*Math.PI/3;
+          const x = cx + (R+12)*Math.cos(ang);
+          const y = cy + (R+12)*Math.sin(ang)+4;
+          ctx.textAlign = (Math.cos(ang)>0.2)?'left':(Math.cos(ang)<-0.2?'right':'center');
+          ctx.fillText(labels[a], x, y);
+        }
+
+        // Data polygon
+        ctx.beginPath();
+        vals.forEach((v,i)=>{
+          const ang = -Math.PI/2 + i*2*Math.PI/3;
+          const r = (v/maxVal)*R;
+          const x = cx + r*Math.cos(ang);
+          const y = cy + r*Math.sin(ang);
+          if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(122,168,255,.55)';
+        ctx.strokeStyle = 'rgba(122,168,255,.8)';
+        ctx.lineWidth = 2;
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+      }
+
+      function bumpAndRedraw(kind){
+        // kind: 'domain' | 'literature' | 'ki'
+        // Werte steigen über die jeweiligen Arrays/Counter sowieso; hier nur neu zeichnen:
+        drawRadar(); updateTopLists();
+      }
+
+      /* ---------- Suche: Show/Hide Gruppen ---------- */
+      searchType.addEventListener('change', ()=>{
+        const v = searchType.value;
+        [free_group, lit_group, lit_query_group, ki_group, ki_query_group].forEach(el=> el.style.display='none');
+        if(v==='frei'){ free_group.style.display='block'; free_input.focus(); }
+        else if(v==='literatur'){ lit_group.style.display='block'; lit_query_group.style.display='block'; lit_query.focus(); }
+        else if(v==='ki'){ ki_group.style.display='block'; ki_query_group.style.display='block'; ki_query.focus(); }
       });
 
-      /* --- KI-Hinweis bei Modellauswahl --- */
-      function updateKiHint() {
-        const m = kiModelSelect.value;
-        const needsPaste = (m === 'openai' || m === 'copilot' || m === 'claude');
-        kiHint.style.display = needsPaste ? 'block' : 'none';
-      }
-      kiModelSelect.addEventListener('change', updateKiHint);
-      updateKiHint();
+      /* ---------- Aktionen zählen ---------- */
+      free_form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const input = free_input.value.trim();
+        if(!input) return;
 
-      /* --- Freisuche mit Autocomplete --- */
-      function updateSuggestions(value){
-        const domains = Object.keys(siteCounters || {});
-        const matches = domains.filter(d=> d.toLowerCase().includes(value.toLowerCase())).slice(0,8);
-        if(!value || matches.length === 0){ suggestionBox.style.display='none'; return; }
-        suggestionBox.innerHTML = matches.map(m=>`<div data-value="${m}">${m}</div>`).join('');
-        suggestionBox.style.display='block';
-      }
-      freisucheInput.addEventListener('input', e=> updateSuggestions(e.target.value));
-      suggestionBox.addEventListener('click', (e)=>{
-        const el = e.target.closest('div[data-value]');
-        if(!el) return; freisucheInput.value = el.dataset.value; suggestionBox.style.display='none';
-      });
-      document.addEventListener('click', (e)=>{ if(!suggestionBox.contains(e.target)) suggestionBox.style.display='none'; });
-
-      function startFreisuche(){
-        const input = freisucheInput.value.trim();
-        if (!input) return;
-
-        let url = input, domain;
-        try { domain = new URL(input.startsWith("http") ? input : "https://" + input).hostname; }
+        // Domain ermitteln oder Google-Suche
+        let target = input, domain;
+        try { domain = new URL(input.startsWith('http')?input:'https://'+input).hostname; }
         catch { domain = input; }
 
-        const date = getCurrentDate();
-        if (!siteCounters[domain]) siteCounters[domain] = { count: 0, dates: [] };
-        siteCounters[domain].count += 1;
-        siteCounters[domain].dates.push(date);
-
-        localStorage.setItem("siteCounters", JSON.stringify(siteCounters));
-        updateFreitextTable(); refreshFavoritesBar(); rebuildCalendar();
+        upsertDomainCount(domain);
+        updateDomainTable(); refreshFavoritesBar(); bumpAndRedraw('domain');
 
         const finalUrl = (domain === input)
           ? `https://www.google.com/search?q=${encodeURIComponent(input)}`
-          : (url.startsWith('http') ? url : 'https://' + url);
-        window.open(finalUrl, "_blank");
-      }
-      freisucheSubmit.addEventListener("click", startFreisuche);
-      freisucheInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); startFreisuche(); } });
-
-      /* --- Literatur --- */
-      literatureForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        const s = encodeURIComponent(literatureInput.value.trim());
-        const googleUrl = "https://www.google.com/search?q=" + s;
-        const thulbUrl  = "https://suche.thulb.uni-jena.de/Search/Results?lookfor=" + s;
-        const jstorUrl  = "https://www.jstor.org/action/doBasicSearch?Query=" + s;
-
-        const engine = engineSelect.value;
-        const date = getCurrentDate();
-
-        if (!counters[engine]) counters[engine] = [];
-        counters[engine].push({ date });
-
-        if (!keywords[engine]) keywords[engine] = [];
-        keywords[engine].push({ keyword: literatureInput.value.trim(), date });
-
-        localStorage.setItem("literaturCounters", JSON.stringify(counters));
-        localStorage.setItem("literaturKeywords", JSON.stringify(keywords));
-
-        if (engine === "google")      window.open(googleUrl, "_blank");
-        else if (engine === "thulb")  window.open(thulbUrl, "_blank");
-        else if (engine === "jstor")  window.open(jstorUrl, "_blank");
-
-        updateLiteratureTables(); rebuildCalendar();
+          : (target.startsWith('http')?target:'https://'+target);
+        window.open(finalUrl,'_blank');
+        free_input.value='';
       });
 
-      /* --- KI-Anfragen --- */
-      kiForm.addEventListener("submit", async function(e){
+      lit_form.addEventListener('submit',(e)=>{
         e.preventDefault();
-        const model = kiModelSelect.value;
-        const prompt = kiPromptInput.value.trim();
-        if(!prompt) return;
-        const date = getCurrentDate();
+        const kw = lit_query.value.trim(); if(!kw) return;
+        const eng = lit_engine.value;
+        const date = todayISO();
+        ensure(literatur, eng, []);
+        literatur[eng].push({keyword:kw,date});
+        localStorage.setItem('literaturKeywords', JSON.stringify(literatur));
+        updateLiteratureTable(); bumpAndRedraw('literature');
 
-        kiQueries.push({ model, prompt, date });
-        localStorage.setItem("kiQueries", JSON.stringify(kiQueries));
-        updateKiTable(); rebuildCalendar();
+        const urls = {
+          google:`https://www.google.com/search?q=${encodeURIComponent(kw)}`,
+          thulb:`https://suche.thulb.uni-jena.de/Search/Results?lookfor=${encodeURIComponent(kw)}`,
+          jstor:`https://www.jstor.org/action/doBasicSearch?Query=${encodeURIComponent(kw)}`
+        };
+        window.open(urls[eng], '_blank');
+        lit_query.value='';
+      });
 
+      function showKiHintIfNeeded(){
+        const needsPaste = (ki_model.value==='openai' || ki_model.value==='copilot' || ki_model.value==='claude');
+        ki_hint.style.display = needsPaste ? 'block' : 'none';
+      }
+      ki_model.addEventListener('change', showKiHintIfNeeded);
+
+      ki_form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const prompt = ki_query.value.trim(); if(!prompt) return;
+        const model = ki_model.value;
+        const date = todayISO();
+        kiQueries.push({model, prompt, date});
+        localStorage.setItem('kiQueries', JSON.stringify(kiQueries));
+        updateKiTable(); bumpAndRedraw('ki');
+
+        // Weiterleitung
         const urls = {
           openai:     "https://chat.openai.com/",
           copilot:    "https://copilot.microsoft.com/",
           claude:     "https://claude.ai/new",
           perplexity: "https://www.perplexity.ai/?q=" + encodeURIComponent(prompt)
         };
-        if(model !== "perplexity"){
-          try{
-            await navigator.clipboard.writeText(prompt);
-            showToast("Prompt in Zwischenablage. Im neuen Tab mit STRG+V einfügen.");
-          }catch{
-            showToast("Kopieren fehlgeschlagen. Bitte Prompt manuell kopieren.");
-          }
-        } else {
-          showToast("Perplexity mit vorbefülltem Prompt geöffnet.");
+        if(model!=='perplexity'){
+          try{ await navigator.clipboard.writeText(prompt); }catch{}
         }
-        window.open(urls[model], "_blank");
-        kiPromptInput.value = "";
+        window.open(urls[model], '_blank');
+        ki_query.value='';
+        showKiHintIfNeeded();
       });
 
-      /* --- Favoriten --- */
-      function isFavorite(domain){ return favorites.includes(domain); }
-      function toggleFavorite(domain){
-        if(isFavorite(domain)) favorites = favorites.filter(d=> d!==domain);
-        else favorites.push(domain);
-        localStorage.setItem('favoritesDomains', JSON.stringify(favorites));
-        refreshFavoritesBar();
-        updateFreitextTable();
-      }
-      function refreshFavoritesBar(){
-        favoritesBar.innerHTML = favorites.map(d=>`<a href="https://${d}" target="_blank" rel="noopener">${d}</a>`).join('');
-        favoritesBar.style.display = favorites.length ? 'flex' : 'none';
-      }
-
-      /* --- Tabellenaufbau (mit robustem Datumsfilter) --- */
-      function getFilterDate() {
-        return (modeSelect.value === 'date' && selectedDate) ? localISO(selectedDate) : null;
-      }
-
-      function updateFreitextTable() {
-        tableBody.innerHTML = "";
-        const filterDate = getFilterDate();
-
-        for (let domain in siteCounters) {
-          const { count, dates=[] } = siteCounters[domain];
-          const shownCount = filterDate ? dates.filter(d => d === filterDate).length : count;
-          if (shownCount > 0) {
-            const favOn = isFavorite(domain);
-            const row = document.createElement("tr");
-            row.innerHTML =
-              `<td data-domain="${domain}">${domain}</td>` +
-              `<td style="display:flex; justify-content:space-between; align-items:center;">` +
-                `<span>${shownCount}</span>` +
-                `<button class="star ${favOn ? 'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn ? '★' : '☆'}</button>` +
-              `</td>`;
-            tableBody.appendChild(row);
-          }
-        }
-      }
-
-      function updateLiteratureTables() {
-        thulbTableBody.innerHTML = ""; jstorTableBody.innerHTML = ""; googleTableBody.innerHTML = "";
-        const filterDate = getFilterDate();
-
-        function fill(engine, body, label){
-          const list = keywords[engine] || [];
-          const arr  = filterDate ? list.filter(e=> e.date === filterDate) : list;
-          const count = arr.length;
-          const kws = arr.map(e=>e.keyword).join(', ');
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${label}</td><td>${count}</td><td>${kws}</td>`;
-          body.appendChild(tr);
-        }
-        fill('thulb', thulbTableBody, 'ThulB');
-        fill('jstor', jstorTableBody, 'JStor');
-        fill('google', googleTableBody, 'Google');
-      }
-
-      function updateKiTable(){
-        kiTableBody.innerHTML = "";
-        const filterDate = getFilterDate();
-        kiQueries
-          .filter(q => !filterDate || q.date === filterDate)
-          .slice().reverse()
-          .forEach(({model, date, prompt})=>{
-            const tr = document.createElement('tr');
-            const label = ({openai:"OpenAI (ChatGPT)", copilot:"Copilot", perplexity:"Perplexity", claude:"Claude"})[model] || model;
-            tr.innerHTML = `<td>${label}</td><td>${date}</td><td>${prompt}</td>`;
-            kiTableBody.appendChild(tr);
-          });
-      }
-
-      /* --- Filter/Calendar --- */
-      modeSelect.addEventListener("change", function () {
-        const dateMode = (this.value === "date");
-        calendarWrap.style.display = dateMode ? "flex" : "none";
-        updateFreitextTable(); updateLiteratureTables(); updateKiTable(); rebuildCalendar();
-      });
-
-      // Kalender-State
-      let viewYear, viewMonth; // 0-basiert
-      let selectedDate = null;
-
-      function initMonthYear() {
-        const now = new Date();
-        viewYear = now.getFullYear();
-        viewMonth = now.getMonth();
-        selectedDate = null;
-
-        const months = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
-        monthSelect.innerHTML = months.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
-
-        const ys=[]; for(let y=now.getFullYear()-10; y<=now.getFullYear()+3; y++) ys.push(y);
-        yearSelect.innerHTML = ys.map(y=>`<option value="${y}">${y}</option>`).join('');
-
-        monthSelect.value = String(viewMonth);
-        yearSelect.value = String(viewYear);
-      }
-
-      prevMonthBtn.addEventListener('click', ()=>{ viewMonth--; if(viewMonth<0){ viewMonth=11; viewYear--; } syncSelectors(); rebuildCalendar(); });
-      nextMonthBtn.addEventListener('click', ()=>{ viewMonth++; if(viewMonth>11){ viewMonth=0; viewYear++; } syncSelectors(); rebuildCalendar(); });
-      monthSelect.addEventListener('change', ()=>{ viewMonth = parseInt(monthSelect.value,10); rebuildCalendar(); });
-      yearSelect.addEventListener('change', ()=>{ viewYear = parseInt(yearSelect.value,10); rebuildCalendar(); });
-
-      function syncSelectors(){ monthSelect.value=String(viewMonth); yearSelect.value=String(viewYear); }
-
-      function rebuildCalendar(){
-        if(modeSelect.value !== "date"){ calendarEl.innerHTML = ""; return; }
-        calendarEl.innerHTML = "";
-
-        const first = new Date(viewYear, viewMonth, 1);
-        const startDow = (first.getDay()+6)%7; // Mo=0
-        const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
-
-        const grid = [];
-        ["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(d=> grid.push(`<div class="dow">${d}</div>`));
-        for(let i=0;i<startDow;i++) grid.push(`<div></div>`);
-
-        const activeDays = new Set();
-        const markDay = iso => {
-          if(!iso) return;
-          const [yy,mm,dd]=iso.split("-").map(n=>parseInt(n,10));
-          if(yy===viewYear && (mm-1)===viewMonth) activeDays.add(dd);
-        };
-        // Domains
-        Object.values(siteCounters).forEach(v => (v.dates||[]).forEach(markDay));
-        // Literatur
-        Object.values(keywords).forEach(arr => (arr||[]).forEach(e=> markDay(e.date)));
-        // KI
-        kiQueries.forEach(q => markDay(q.date));
-
-        const selectedDay = selectedDate && selectedDate.getFullYear()===viewYear && selectedDate.getMonth()===viewMonth
-          ? selectedDate.getDate() : null;
-
-        for(let d=1; d<=daysInMonth; d++){
-          const has = activeDays.has(d), sel = (selectedDay===d);
-          grid.push(`<div class="day ${has?"hasData":""} ${sel?"selected":""}" data-day="${d}">${d}</div>`);
-        }
-        calendarEl.innerHTML = grid.join("");
-
-        // Klickhandler
-        calendarEl.querySelectorAll('.day').forEach(el=>{
-          if(!el.dataset.day) return;
-          el.addEventListener('click', ()=>{
-            selectedDate = new Date(viewYear, viewMonth, parseInt(el.dataset.day,10));
-            updateFreitextTable(); updateLiteratureTables(); updateKiTable(); rebuildCalendar();
-          });
-        });
-      }
-
-      /* --- Table Interactions --- */
+      /* Klicks auf Domain-Links zählen (Tabelle) */
       tableBody.addEventListener('click', (e)=>{
-        const btn = e.target.closest('.star');
-        if(!btn) return;
-        const domain = btn.getAttribute('data-domain');
-        toggleFavorite(domain);
+        const a = e.target.closest('a.domainLink');
+        if(a){
+          const d = a.getAttribute('data-domain');
+          upsertDomainCount(d);
+          updateDomainTable(); bumpAndRedraw('domain');
+          return; // normaler Link öffnet in neuem Tab (target=_blank)
+        }
+        const star = e.target.closest('.star');
+        if(star){ toggleFavorite(star.getAttribute('data-domain')); }
       });
 
-      /* --- Toast --- */
-      let toastTimer=null;
-      function showToast(msg){
-        toast.textContent = msg;
-        toast.classList.add('show');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(()=> toast.classList.remove('show'), 2500);
-      }
+      /* Klicks auf Favoriten zählen */
+      favoritesBar.addEventListener('click', (e)=>{
+        const a = e.target.closest('a.favLink');
+        if(!a) return;
+        const domain = a.getAttribute('data-domain');
+        upsertDomainCount(domain);
+        updateDomainTable(); bumpAndRedraw('domain');
+      });
 
-      /* --- Initialisierung --- */
+      /* ---------- Initial ---------- */
       refreshFavoritesBar();
+      updateDomainTable();
+      updateLiteratureTable();
       updateKiTable();
-      updateLiteratureTables();
-      updateFreitextTable();
-
-      initMonthYear();
-      rebuildCalendar();
+      updateTopLists();
+      drawRadar();
+      showKiHintIfNeeded();
     });
   </script>
+
+
+  <footer>
+    <div class="container" onclick="window.location.href='https://datenflix007.github.io/';">© 2025 Felix Staacke</div>
+  </footer>
 </body>
 </html>
