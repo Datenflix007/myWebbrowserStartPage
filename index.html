@@ -336,31 +336,28 @@
     <header>MyWebHub</header>
 
     <div class="shell">
-        <!-- NEUES Layout: optionale Tools-Spalte + Hauptinhalt -->
         <div id="appGrid" class="appGrid no-tools">
-            <!-- Tools (wird per JS ein-/ausgeblendet) -->
+            <!-- Tools -->
             <aside id="toolsPanel" class="card toolsPanel" style="display:none">
                 <h3>Tools</h3>
                 <div id="toolsLoading" class="muted">Lade …</div>
                 <ul id="toolsList" class="toolsList"></ul>
             </aside>
 
-            <!-- Hauptinhalt unverändert (nur eingerückt in #mainColumn) -->
+            <!-- Hauptinhalt -->
             <div id="mainColumn">
-                <!-- SUCHE -->
                 <div class="card">
                     <div class="row">
                         <div class="control">
                             <label for="searchType">Art der Suche</label>
                             <select id="searchType">
-                                <option value="">— auswählen —</option>
-                                <option value="frei">Freisuche</option>
-                                <option value="literatur">Literatursuche</option>
-                                <option value="ki">KI-Anfrage</option>
-                            </select>
+                <option value="">— auswählen —</option>
+                <option value="frei">Freisuche</option>
+                <option value="literatur">Literatursuche</option>
+                <option value="ki">KI-Anfrage</option>
+              </select>
                         </div>
 
-                        <!-- Freisuche -->
                         <div class="control" id="free_group" style="display:none; min-width:min(560px,100%);">
                             <label for="free_input">URL oder Suchbegriff</label>
                             <form id="free_form" class="row" style="gap:10px;">
@@ -369,14 +366,13 @@
                             </form>
                         </div>
 
-                        <!-- Literatur -->
                         <div class="control" id="lit_group" style="display:none;">
                             <label for="lit_engine">Datenbank</label>
                             <select id="lit_engine">
-                                <option value="google">Google</option>
-                                <option value="thulb">ThulB</option>
-                                <option value="jstor">JStor</option>
-                            </select>
+                <option value="google">Google</option>
+                <option value="thulb">ThulB</option>
+                <option value="jstor">JStor</option>
+              </select>
                         </div>
                         <div class="control" id="lit_query_group" style="display:none; min-width:min(560px,100%);">
                             <label for="lit_query">Schlagwort</label>
@@ -386,15 +382,14 @@
                             </form>
                         </div>
 
-                        <!-- KI -->
                         <div class="control" id="ki_group" style="display:none;">
                             <label for="ki_model">LLM-Modell</label>
                             <select id="ki_model">
-                                <option value="openai">OpenAI (ChatGPT)</option>
-                                <option value="copilot">Microsoft Copilot</option>
-                                <option value="perplexity">Perplexity</option>
-                                <option value="claude">Claude</option>
-                            </select>
+                <option value="openai">OpenAI (ChatGPT)</option>
+                <option value="copilot">Microsoft Copilot</option>
+                <option value="perplexity">Perplexity</option>
+                <option value="claude">Claude</option>
+              </select>
                             <div id="ki_hint" style="display:none; margin-top:6px; color:#ff9e9e; font-weight:700;">
                                 Prompt ist in der Zwischenablage – bei der KI mit <strong>Strg+V</strong> einfügen.
                             </div>
@@ -409,10 +404,8 @@
                     </div>
                 </div>
 
-                <!-- Favoriten-Leiste -->
                 <div id="favoritesBar" class="favoritesBar"></div>
 
-                <!-- Radar + Top 5 an den Ecken -->
                 <section class="radarArea">
                     <div class="topBox box-domains">
                         <h4>Top 5 Domains</h4>
@@ -428,16 +421,11 @@
                     </div>
 
                     <div class="radarWrap">
-                        <div class="radarCanvas">
-                            <canvas id="radar"></canvas>
-                        </div>
-                        <div class="radarLegend">
-                            <b>Netzdiagramm:</b> Domänen • Literatur • KI — jeder neue Vorgang schlägt die jeweilige Achse um 1 aus.
-                        </div>
+                        <div class="radarCanvas"><canvas id="radar"></canvas></div>
+                        <div class="radarLegend"><b>Netzdiagramm:</b> Domänen • Literatur • KI — jeder neue Vorgang schlägt die jeweilige Achse um 1 aus.</div>
                     </div>
                 </section>
 
-                <!-- Nutzungsstatistik -->
                 <section class="stats" id="stats">
                     <h3>Nutzungsstatistik</h3>
                     <table>
@@ -452,7 +440,6 @@
                     </table>
                 </section>
 
-                <!-- Literatur-Statistik -->
                 <section class="stats" id="literatureStats">
                     <h3>Literaturrecherche-Statistik</h3>
                     <table>
@@ -467,7 +454,6 @@
                     </table>
                 </section>
 
-                <!-- KI-Statistik -->
                 <section class="stats" id="kiStats">
                     <h3>KI-Anfragen</h3>
                     <table>
@@ -486,40 +472,30 @@
                     <a id="footerLink" href="https://datenflix007.github.io/" target="_blank" rel="noopener">© <span id="year"></span> Felix Staacke</a>
                 </footer>
             </div>
-            <!-- /#mainColumn -->
         </div>
-        <!-- /#appGrid -->
     </div>
-    <!-- /.shell -->
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
     <script>
-        /* Pfad zum Tools-Ordner setzen, z.B. "/tools/".
-                                                                                           Wenn leer ("" oder null), wird die Tools-Leiste nicht angezeigt. */
-        // statt: const TOOLS_PATH = "/tools/";
-        const RAW_TOOLS_PATH = "tools/"; // relativer Ordnername neben index.html
+        // Relativer Pfad zum Tools-Ordner (neben index.html)
+        const RAW_TOOLS_PATH = "tools/";
         const TOOLS_PATH = new URL(RAW_TOOLS_PATH, document.baseURI).href;
 
-
-        document.addEventListener("DOMContentLoaded", function() {
-            /* ---------- DOM ---------- */
+        document.addEventListener("DOMContentLoaded", () => {
             const appGrid = document.getElementById('appGrid');
             const toolsPanel = document.getElementById('toolsPanel');
             const toolsList = document.getElementById('toolsList');
             const toolsLoading = document.getElementById('toolsLoading');
 
             const searchType = document.getElementById('searchType');
-
             const free_group = document.getElementById('free_group');
             const free_form = document.getElementById('free_form');
             const free_input = document.getElementById('free_input');
-
             const lit_group = document.getElementById('lit_group');
             const lit_query_group = document.getElementById('lit_query_group');
             const lit_engine = document.getElementById('lit_engine');
             const lit_form = document.getElementById('lit_form');
             const lit_query = document.getElementById('lit_query');
-
             const ki_group = document.getElementById('ki_group');
             const ki_query_group = document.getElementById('ki_query_group');
             const ki_model = document.getElementById('ki_model');
@@ -538,9 +514,26 @@
 
             document.getElementById('year').textContent = new Date().getFullYear();
 
-            /* ---------- Tools-Leiste (optional) ---------- */
+            // ---------- Tools-Leiste ----------
             function ensureTrailingSlash(p) {
                 return p.endsWith('/') ? p : (p + '/');
+            }
+
+            function normalizeItems(items) {
+                const arr = Array.isArray(items) ? items :
+                    (items && Array.isArray(items.files) ? items.files : []);
+                return arr
+                    .map(it => (typeof it === 'string' ?
+                        {
+                            file: it,
+                            label: it.replace(/\.html?$/i, '')
+                        } :
+                        {
+                            file: it.file,
+                            label: it.label || (it.file || '').replace(/\.html?$/i, '')
+                        }
+                    ))
+                    .filter(x => x.file && /\.html?$/i.test(x.file));
             }
 
             async function fromManifest(base) {
@@ -548,22 +541,8 @@
                     const res = await fetch(base + 'tools.json', {
                         cache: 'no-store'
                     });
-                    if (!res.ok) {
-                        console.warn('tools.json status:', res.status, base);
-                        return null;
-                    }
-                    const data = await res.json();
-                    const items = Array.isArray(data) ? data : (Array.isArray(data.files) ? data.files : []);
-                    return items.map(it => {
-                        if (typeof it === 'string') return {
-                            file: it,
-                            label: it.replace(/\.html?$/i, '')
-                        };
-                        return {
-                            file: it.file,
-                            label: it.label || (it.file || '').replace(/\.html?$/i, '')
-                        };
-                    }).filter(x => x.file && /\.html?$/i.test(x.file));
+                    if (!res.ok) return null;
+                    return normalizeItems(await res.json());
                 } catch {
                     return null;
                 }
@@ -611,8 +590,25 @@
                 }
             }
 
+            // Fallback für file:// — lädt tools.manifest.js und liest window.TOOLS_MANIFEST
+            function fromManifestScript(base) {
+                return new Promise(resolve => {
+                    const s = document.createElement('script');
+                    s.src = base + 'tools.manifest.js';
+                    s.onload = () => {
+                        const raw = window.TOOLS_MANIFEST;
+                        try {
+                            delete window.TOOLS_MANIFEST;
+                        } catch {}
+                        resolve(raw ? normalizeItems(raw) : null);
+                    };
+                    s.onerror = () => resolve(null);
+                    document.head.appendChild(s);
+                });
+            }
+
             async function tryLoadTools() {
-                if (!TOOLS_PATH) { // kein Pfad -> Tools ausblenden & 1-Spalten-Layout
+                if (!TOOLS_PATH) {
                     toolsPanel.style.display = 'none';
                     appGrid.classList.add('no-tools');
                     return;
@@ -620,25 +616,29 @@
 
                 const base = ensureTrailingSlash(TOOLS_PATH);
 
-                // Panel sofort zeigen (damit "Lade …" sichtbar ist)
                 toolsPanel.style.display = 'block';
                 appGrid.classList.remove('no-tools');
                 toolsLoading.style.display = 'block';
                 toolsList.innerHTML = '';
 
-                // 1) Manifest, 2) Directory Listing, 3) index.html parsen
-                let items = await fromManifest(base);
-                if (!items) items = await fromDirectoryListing(base);
-                if (!items) items = await fromIndexHtml(base);
+                let items = null;
+                if (location.protocol === 'file:') {
+                    // fetch blockiert -> Script-Fallback
+                    items = await fromManifestScript(base);
+                } else {
+                    items = await fromManifest(base) || await fromDirectoryListing(base) || await fromIndexHtml(base);
+                    // falls Server Listing/Manifest nicht erlaubt, probiere auch Script-Fallback
+                    if (!items) items = await fromManifestScript(base);
+                }
 
                 if (!items || !items.length) {
-                    toolsLoading.innerHTML = 'Keine .html-Dateien gefunden oder Zugriff auf Ordner blockiert. ' +
-                        'Lege optional <code>tools.json</code> im Tools-Ordner an (Array mit Dateinamen).';
+                    toolsLoading.innerHTML = 'Keine .html-Dateien gefunden. ' +
+                        'Lokal ohne Server nutze bitte <code>tools.manifest.js</code> im Ordner <code>tools/</code> ' +
+                        'und definiere <code>window.TOOLS_MANIFEST</code>.';
                     return;
                 }
 
                 toolsLoading.style.display = 'none';
-
                 items.forEach(({
                     file,
                     label
@@ -651,14 +651,14 @@
             }
             tryLoadTools();
 
-            /* ---------- Storage ---------- */
-            let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}"); // {domain: {count, dates[]}}
-            let favorites = JSON.parse(localStorage.getItem("favoritesDomains") || "[]"); // [domain]
-            let literatur = JSON.parse(localStorage.getItem("literaturKeywords") || "{}"); // {engine: [{keyword,date}]}
-            let kiQueries = JSON.parse(localStorage.getItem("kiQueries") || "[]"); // [{model,prompt,date}]
+            // ---------- Storage ----------
+            let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}");
+            let favorites = JSON.parse(localStorage.getItem("favoritesDomains") || "[]");
+            let literatur = JSON.parse(localStorage.getItem("literaturKeywords") || "{}");
+            let kiQueries = JSON.parse(localStorage.getItem("kiQueries") || "[]");
 
-            /* ---------- Helpers ---------- */
-            const pad2 = (n) => String(n).padStart(2, '0');
+            // ---------- Helpers ----------
+            const pad2 = n => String(n).padStart(2, '0');
             const todayISO = () => {
                 const d = new Date();
                 return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
@@ -693,7 +693,7 @@
                 localStorage.setItem("siteCounters", JSON.stringify(siteCounters));
             }
 
-            /* ---------- Suche: Show/Hide ---------- */
+            // ---------- Suche ----------
             searchType.addEventListener('change', () => {
                 const v = searchType.value;
                 [free_group, lit_group, lit_query_group, ki_group, ki_query_group].forEach(el => el.style.display = 'none');
@@ -712,12 +712,10 @@
                 }
             });
 
-            /* ---------- Freisuche ---------- */
             free_form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const input = free_input.value.trim();
                 if (!input) return;
-
                 let url = input,
                     domain;
                 try {
@@ -725,21 +723,17 @@
                 } catch {
                     domain = input;
                 }
-
                 upsertDomainCount(domain);
                 updateDomainTable();
                 refreshFavoritesBar();
                 updateTopLists();
                 updateRadar();
-
-                const finalUrl = (domain === input) ?
-                    `https://www.google.com/search?q=${encodeURIComponent(input)}` :
+                const finalUrl = (domain === input) ? `https://www.google.com/search?q=${encodeURIComponent(input)}` :
                     (url.startsWith('http') ? url : 'https://' + url);
                 window.open(finalUrl, '_blank');
                 free_input.value = '';
             });
 
-            /* ---------- Literatur ---------- */
             lit_form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const kw = lit_query.value.trim();
@@ -755,7 +749,6 @@
                 updateLiteratureTable();
                 updateTopLists();
                 updateRadar();
-
                 const urls = {
                     google: `https://www.google.com/search?q=${encodeURIComponent(kw)}`,
                     thulb: `https://suche.thulb.uni-jena.de/Search/Results?lookfor=${encodeURIComponent(kw)}`,
@@ -765,7 +758,6 @@
                 lit_query.value = '';
             });
 
-            /* ---------- KI ---------- */
             function updateKiHint() {
                 const needsPaste = (ki_model.value === 'openai' || ki_model.value === 'copilot' || ki_model.value === 'claude');
                 ki_hint.style.display = needsPaste ? 'block' : 'none';
@@ -787,7 +779,6 @@
                 updateKiTable();
                 updateTopLists();
                 updateRadar();
-
                 const urls = {
                     openai: "https://chat.openai.com/",
                     copilot: "https://copilot.microsoft.com/",
@@ -804,11 +795,9 @@
                 updateKiHint();
             });
 
-            /* ---------- Favoriten / Tabellen ---------- */
+            // ---------- Favoriten / Tabellen ----------
             function refreshFavoritesBar() {
-                favoritesBar.innerHTML = favorites
-                    .map(d => `<a class="favLink" data-domain="${d}" href="https://${d}" target="_blank" rel="noopener">${d}</a>`)
-                    .join('');
+                favoritesBar.innerHTML = favorites.map(d => `<a class="favLink" data-domain="${d}" href="https://${d}" target="_blank" rel="noopener">${d}</a>`).join('');
                 favoritesBar.style.display = favorites.length ? 'flex' : 'none';
             }
 
@@ -823,9 +812,7 @@
                     tr.innerHTML =
                         `<td><a class="domainLink" data-domain="${domain}" href="https://${domain}" target="_blank" rel="noopener" style="color:#dfe7ff;">${domain}</a></td>` +
                         `<td>${count}</td>` +
-                        `<td style="width:70px; text-align:center;">` +
-                        `<button class="star ${favOn?'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn?'★':'☆'}</button>` +
-                        `</td>`;
+                        `<td style="width:70px; text-align:center;"><button class="star ${favOn?'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn?'★':'☆'}</button></td>`;
                     tableBody.appendChild(tr);
                 }
             }
@@ -836,9 +823,7 @@
                 for (const eng of engines) {
                     const arr = literatur[eng] || [];
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>${eng.charAt(0).toUpperCase()+eng.slice(1)}</td>` +
-                        `<td>${arr.length}</td>` +
-                        `<td>${arr.map(e=>e.keyword).join(', ')}</td>`;
+                    tr.innerHTML = `<td>${eng.charAt(0).toUpperCase()+eng.slice(1)}</td><td>${arr.length}</td><td>${arr.map(e=>e.keyword).join(', ')}</td>`;
                     litTableBody.appendChild(tr);
                 }
             }
@@ -850,29 +835,27 @@
                     date,
                     prompt
                 }) => {
-                    const tr = document.createElement('tr');
                     const label = ({
                         openai: "OpenAI",
                         copilot: "Copilot",
                         perplexity: "Perplexity",
                         claude: "Claude"
                     })[model] || model;
+                    const tr = document.createElement('tr');
                     tr.innerHTML = `<td>${label}</td><td>${date}</td><td>${prompt}</td>`;
                     kiTableBody.appendChild(tr);
                 });
             }
 
-            /* ---------- Top 5 ---------- */
             function renderPills(el, arr) {
                 el.innerHTML = arr.slice(0, 5).map(x => `<span class="pill"><span>${x.label}</span><span class="cnt">${x.count}</span></span>`).join('') || '<span class="pill">–</span>';
             }
 
             function updateTopLists() {
                 const dom = Object.entries(siteCounters).map(([d, v]) => ({
-                        label: d,
-                        count: v.count
-                    }))
-                    .sort((a, b) => b.count - a.count);
+                    label: d,
+                    count: v.count
+                })).sort((a, b) => b.count - a.count);
                 renderPills(topDomainsEl, dom);
 
                 const litMap = {};
@@ -902,7 +885,7 @@
                 renderPills(topKIEl, kiArr);
             }
 
-            /* ---------- Radar (Chart.js) ---------- */
+            // ---------- Radar ----------
             const radarCtx = document.getElementById('radar').getContext('2d');
             const radarChart = new Chart(radarCtx, {
                 type: 'radar',
@@ -957,7 +940,6 @@
                 return [domains, literature, ki];
             }
 
-
             function updateRadar() {
                 const t = totals();
                 const max = Math.max(5, ...t);
@@ -966,7 +948,6 @@
                 radarChart.update();
             }
 
-            /* ---------- Click Events zählen ---------- */
             tableBody.addEventListener('click', (e) => {
                 const a = e.target.closest('a.domainLink');
                 if (a) {
@@ -993,7 +974,6 @@
                 updateRadar();
             });
 
-            /* ---------- Initial render ---------- */
             refreshFavoritesBar();
             updateDomainTable();
             updateLiteratureTable();
@@ -1008,16 +988,13 @@
             const canvas = document.getElementById('radar');
             const boxes = document.querySelectorAll('.topBox');
             if (!area || !canvas) return;
-
             const areaRect = area.getBoundingClientRect();
             const canvasRect = canvas.getBoundingClientRect();
             let maxBottom = canvasRect.bottom;
-
             boxes.forEach(b => {
                 const r = b.getBoundingClientRect();
                 if (r.bottom > maxBottom) maxBottom = r.bottom;
             });
-
             const needed = Math.ceil(maxBottom - areaRect.top + 16);
             area.style.height = needed + 'px';
         }
