@@ -1,565 +1,1027 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Hub</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0b0f17;
-      --card:#0f1624;
-      --text:#d4d9e3;
-      --muted:#93a0b4;
-      --accent1:#7aa8ff;
-      --accent2:#a78bfa;
-      --radius:18px;
-      --shadow: 0 6px 30px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.03);
-      --ok:#38d39f;
-      --warn:#ffd166;
-    }
-    *{ box-sizing: border-box; }
-    body{
-      margin:0;
-      font-family: 'Inter', sans-serif;
-      color: var(--text);
-      background: radial-gradient(80% 120% at 10% 0%, #111b2d 0%, var(--bg) 40%) no-repeat fixed;
-    }
-    .shell{ max-width:1200px; margin:0 auto; padding: 28px 20px 0; }
-    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px;}
-    .brand{ display:flex; align-items:center; gap:14px; font-weight:800; font-size:22px; cursor:pointer; color:var(--text); }
-    .brand .dot{ width:16px; height:16px; border-radius:8px; background:linear-gradient(135deg,var(--accent1),var(--accent2)); box-shadow:0 0 24px rgba(122,168,255,.45); }
-    .card{ margin-top:10px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius: var(--radius); box-shadow: var(--shadow); padding:18px; }
-    .row{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
-    label{ font-size:12px; color:#a6b1c2; font-weight:600; text-transform:uppercase; }
-    select,input[type="text"]{ appearance:none; border:none; outline:none; color:var(--text); background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); padding:12px 14px; border-radius:12px; }
-    button{ cursor:pointer; padding:12px 16px; border-radius:12px; border:1px solid rgba(255,255,255,.1); background: linear-gradient(135deg, var(--accent1), var(--accent2)); color:#0b0f17; font-weight:800; }
-
-    .stats{ margin-top:28px; }
-    table{ width:100%; border-collapse: collapse; background: rgba(255,255,255,.02); border-radius:12px; overflow:hidden; }
-    thead{ background: rgba(255,255,255,.04); }
-    th,td{ text-align:left; padding:12px 14px; border-bottom: 1px solid rgba(255,255,255,.06); }
-
-    /* Favoriten-Leiste */
-    .favoritesBar{ margin:20px 0; display:flex; gap:10px; flex-wrap:wrap; }
-    .favoritesBar a{ text-decoration:none; color: var(--text); background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:8px 12px; border-radius:999px; white-space:nowrap; }
-    .star{ cursor:pointer; font-size:18px; line-height:1; background:none; border:none; color:#9fb4ff; }
-    .star.on{ color:#ffd166; text-shadow:0 0 12px rgba(255,209,102,.35); }
-
-    /* Radarbereich mit Corner-Boxes */
-    .radarArea{
-      margin: 50px 0 10px;
-      padding: 18px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-      border-radius: 28px;
-      position: relative;
-      height: 800px;
-    }
-    .radarWrap{
-      position: relative;
-      top: calc(var(--domains-box-height, 100px) + 20px);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding-top:100px; /* Canvas startet 100px unter Oberkante */
-    }
-    .radarCanvas {
-      background: rgba(255,255,255,.03);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:16px;
-      padding:16px;
-      width: 600px;
-      height: 480px;        /* Höhe hinzufügen */
-      display: flex;        /* Flexbox */
-      justify-content: center; /* horizontal mittig */
-      align-items: center;     /* vertikal mittig */
-    }
-
-    .radarLegend{ font-size:12px; color:#a6b1c2; margin-top:8px; max-width:760px; text-align:center; width:100%; width: 600px;}
-
-    .topBox{
-      position:absolute;
-      background: rgba(0,0,0,.28);
-      border:1px solid rgba(255,255,255,.1);
-      border-radius:12px;
-      padding:10px 12px;
-      width:260px;
-      backdrop-filter: blur(2px);
-    }
-    .topBox h4{ margin:0 0 8px; font-size:14px; }
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:6px 10px; border-radius:999px;
-      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08);
-      margin:4px 6px 0 0; font-size:12px;
-    }
-    .pill .cnt{ font-weight:700; color:#cfe3ff; }
-
-    /* Positionen der Boxen (über/bei den Ecken) */
-    .box-domains{ top:14px; left:50%; transform:translateX(-50%); } /* über Domains */
-    .box-literatur{ top:50%; right:16px; transform:translateY(-50%); } /* rechts – Literatur */
-    .box-ki{ top:50%; left:16px; transform:translateY(-50%); }      /* links – KI; gleiche Höhe */
-
-    /* Footer – mittig */
-    footer{
-      display:flex; justify-content:center; align-items:center;
-      padding: 36px 0 60px;
-      color:#a6b1c2;
-    }
-    footer a{ color:#a6b1c2; text-decoration:none; }
-    header {
-      width: 100%;
-      padding: 28px 0;
-      text-align: center;
-      font-size: 36px;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      background: linear-gradient(180deg, #1a1d23 0%, #111318 100%); /* mächtiger anthrazit Farbverlauf */
-      color: #e4e7ed;  /* helles Grau für starken Kontrast */
-      border-bottom: 2px solid rgba(255,255,255,0.08);
-      box-shadow: 0 4px 18px rgba(0,0,0,0.6);
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6); /* kräftiger Text-Schimmer */
-    }
-
-
-
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+         :root {
+            --bg: #0b0f17;
+            --card: #0f1624;
+            --text: #d4d9e3;
+            --muted: #93a0b4;
+            --accent1: #7aa8ff;
+            --accent2: #a78bfa;
+            --radius: 18px;
+            --shadow: 0 6px 30px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(255, 255, 255, .03);
+            --ok: #38d39f;
+            --warn: #ffd166;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: radial-gradient(80% 120% at 10% 0%, #111b2d 0%, var(--bg) 40%) no-repeat fixed;
+        }
+        
+        .shell {
+            min-width: 1000px;
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 28px 20px 0;
+        }
+        
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 800;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text);
+        }
+        
+        .brand .dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            box-shadow: 0 0 24px rgba(122, 168, 255, .45);
+        }
+        
+        .card {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+        
+        .row {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        label {
+            font-size: 12px;
+            color: #a6b1c2;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        select,
+        input[type="text"] {
+            appearance: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            background: rgba(255, 255, 255, .04);
+            border: 1px solid rgba(255, 255, 255, .08);
+            padding: 12px 14px;
+            border-radius: 12px;
+        }
+        
+        button {
+            cursor: pointer;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+            color: #0b0f17;
+            font-weight: 800;
+        }
+        
+        .stats {
+            margin-top: 28px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, .02);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background: rgba(255, 255, 255, .04);
+        }
+        
+        th,
+        td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, .06);
+        }
+        /* Favoriten-Leiste */
+        
+        .favoritesBar {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .favoritesBar a {
+            text-decoration: none;
+            color: var(--text);
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .1);
+            padding: 8px 12px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+        
+        .star {
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            background: none;
+            border: none;
+            color: #9fb4ff;
+        }
+        
+        .star.on {
+            color: #ffd166;
+            text-shadow: 0 0 12px rgba(255, 209, 102, .35);
+        }
+        /* Hauptlayout mit optionaler Tools-Spalte links */
+        
+        .appGrid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        
+        .appGrid.no-tools {
+            display: block;
+        }
+        
+        .toolsPanel h3 {
+            margin: 4px 0 8px;
+        }
+        
+        .toolsList {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .toolsList a {
+            display: block;
+            text-decoration: none;
+            color: var(--text);
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .1);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .muted {
+            color: var(--muted);
+            font-size: 12px;
+        }
+        /* Radarbereich mit Corner-Boxes */
+        
+        .radarArea {
+            margin: 50px 0 10px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, .08);
+            background: rgba(255, 255, 255, .03);
+            border-radius: 28px;
+            position: relative;
+            height: 800px;
+        }
+        
+        .radarWrap {
+            position: relative;
+            top: calc(var(--domains-box-height, 100px) + 20px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 100px;
+            /* Canvas startet 100px unter Oberkante */
+        }
+        
+        .radarCanvas {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 16px;
+            padding: 16px;
+            width: 600px;
+            height: 480px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .radarLegend {
+            font-size: 12px;
+            color: #a6b1c2;
+            margin-top: 8px;
+            max-width: 760px;
+            text-align: center;
+            width: 100%;
+            width: 600px;
+        }
+        
+        .topBox {
+            position: absolute;
+            background: rgba(0, 0, 0, .28);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 12px;
+            padding: 10px 12px;
+            width: 260px;
+            backdrop-filter: blur(2px);
+        }
+        
+        .topBox h4 {
+            margin: 0 0 8px;
+            font-size: 14px;
+        }
+        
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .08);
+            margin: 4px 6px 0 0;
+            font-size: 12px;
+        }
+        
+        .pill .cnt {
+            font-weight: 700;
+            color: #cfe3ff;
+        }
+        /* Positionen der Boxen */
+        
+        .box-domains {
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .box-literatur {
+            top: 50%;
+            right: 16px;
+            transform: translateY(-50%);
+        }
+        
+        .box-ki {
+            top: 50%;
+            left: 16px;
+            transform: translateY(-50%);
+        }
+        /* Footer */
+        
+        footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 36px 0 60px;
+            color: #a6b1c2;
+        }
+        
+        footer a {
+            color: #a6b1c2;
+            text-decoration: none;
+        }
+        
+        header {
+            width: 100%;
+            padding: 28px 0;
+            text-align: center;
+            font-size: 36px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            background: linear-gradient(180deg, #1a1d23 0%, #111318 100%);
+            color: #e4e7ed;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+    </style>
 </head>
+
 <body>
-  <header>MyWebHub</header>
+    <header>MyWebHub</header>
 
-  <div class="shell">
-     
-   
+    <div class="shell">
+        <!-- NEUES Layout: optionale Tools-Spalte + Hauptinhalt -->
+        <div id="appGrid" class="appGrid no-tools">
+            <!-- Tools (wird per JS ein-/ausgeblendet) -->
+            <aside id="toolsPanel" class="card toolsPanel" style="display:none">
+                <h3>Tools</h3>
+                <div id="toolsLoading" class="muted">Lade …</div>
+                <ul id="toolsList" class="toolsList"></ul>
+            </aside>
 
-    
-    <!-- SUCHE -->
-    <div class="card">
-      <div class="row">
-        <div class="control">
-          <label for="searchType">Art der Suche</label>
-          <select id="searchType">
-            <option value="">— auswählen —</option>
-            <option value="frei">Freisuche</option>
-            <option value="literatur">Literatursuche</option>
-            <option value="ki">KI-Anfrage</option>
-          </select>
-        </div>
+            <!-- Hauptinhalt unverändert (nur eingerückt in #mainColumn) -->
+            <div id="mainColumn">
+                <!-- SUCHE -->
+                <div class="card">
+                    <div class="row">
+                        <div class="control">
+                            <label for="searchType">Art der Suche</label>
+                            <select id="searchType">
+                                <option value="">— auswählen —</option>
+                                <option value="frei">Freisuche</option>
+                                <option value="literatur">Literatursuche</option>
+                                <option value="ki">KI-Anfrage</option>
+                            </select>
+                        </div>
 
-        <!-- Freisuche -->
-        <div class="control" id="free_group" style="display:none; min-width:min(560px,100%);">
-          <label for="free_input">URL oder Suchbegriff</label>
-          <form id="free_form" class="row" style="gap:10px;">
-            <input id="free_input" type="text" placeholder="z. B. wikipedia.org oder 'Römer'" required style="flex:1;"/>
-            <button>Los</button>
-          </form>
-        </div>
+                        <!-- Freisuche -->
+                        <div class="control" id="free_group" style="display:none; min-width:min(560px,100%);">
+                            <label for="free_input">URL oder Suchbegriff</label>
+                            <form id="free_form" class="row" style="gap:10px;">
+                                <input id="free_input" type="text" placeholder="z. B. wikipedia.org oder 'Römer'" required style="flex:1;" />
+                                <button>Los</button>
+                            </form>
+                        </div>
 
-        <!-- Literatur -->
-        <div class="control" id="lit_group" style="display:none;">
-          <label for="lit_engine">Datenbank</label>
-          <select id="lit_engine">
-            <option value="google">Google</option>
-            <option value="thulb">ThulB</option>
-            <option value="jstor">JStor</option>
-          </select>
-        </div>
-        <div class="control" id="lit_query_group" style="display:none; min-width:min(560px,100%);">
-          <label for="lit_query">Schlagwort</label>
-          <form id="lit_form" class="row" style="gap:10px;">
-            <input id="lit_query" type="text" placeholder="Digital History, ..." required style="flex:1;"/>
-            <button>Suchen</button>
-          </form>
-        </div>
+                        <!-- Literatur -->
+                        <div class="control" id="lit_group" style="display:none;">
+                            <label for="lit_engine">Datenbank</label>
+                            <select id="lit_engine">
+                                <option value="google">Google</option>
+                                <option value="thulb">ThulB</option>
+                                <option value="jstor">JStor</option>
+                            </select>
+                        </div>
+                        <div class="control" id="lit_query_group" style="display:none; min-width:min(560px,100%);">
+                            <label for="lit_query">Schlagwort</label>
+                            <form id="lit_form" class="row" style="gap:10px;">
+                                <input id="lit_query" type="text" placeholder="Digital History, ..." required style="flex:1;" />
+                                <button>Suchen</button>
+                            </form>
+                        </div>
 
-        <!-- KI -->
-        <div class="control" id="ki_group" style="display:none;">
-          <label for="ki_model">LLM-Modell</label>
-          <select id="ki_model">
-            <option value="openai">OpenAI (ChatGPT)</option>
-            <option value="copilot">Microsoft Copilot</option>
-            <option value="perplexity">Perplexity</option>
-            <option value="claude">Claude</option>
-          </select>
-          <div id="ki_hint" style="display:none; margin-top:6px; color:#ff9e9e; font-weight:700;">
-            Prompt ist in der Zwischenablage – bei der KI mit <strong>Strg+V</strong> einfügen.
-          </div>
+                        <!-- KI -->
+                        <div class="control" id="ki_group" style="display:none;">
+                            <label for="ki_model">LLM-Modell</label>
+                            <select id="ki_model">
+                                <option value="openai">OpenAI (ChatGPT)</option>
+                                <option value="copilot">Microsoft Copilot</option>
+                                <option value="perplexity">Perplexity</option>
+                                <option value="claude">Claude</option>
+                            </select>
+                            <div id="ki_hint" style="display:none; margin-top:6px; color:#ff9e9e; font-weight:700;">
+                                Prompt ist in der Zwischenablage – bei der KI mit <strong>Strg+V</strong> einfügen.
+                            </div>
+                        </div>
+                        <div class="control" id="ki_query_group" style="display:none; min-width:min(560px,100%);">
+                            <label for="ki_query">Prompt</label>
+                            <form id="ki_form" class="row" style="gap:10px;">
+                                <input id="ki_query" type="text" placeholder="Frag die KI …" required style="flex:1;" />
+                                <button>Anfragen</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Favoriten-Leiste -->
+                <div id="favoritesBar" class="favoritesBar"></div>
+
+                <!-- Radar + Top 5 an den Ecken -->
+                <section class="radarArea">
+                    <div class="topBox box-domains">
+                        <h4>Top 5 Domains</h4>
+                        <div id="topDomains"></div>
+                    </div>
+                    <div class="topBox box-literatur">
+                        <h4>Top 5 Literatur</h4>
+                        <div id="topLit"></div>
+                    </div>
+                    <div class="topBox box-ki">
+                        <h4>Top 5 KI-Prompts</h4>
+                        <div id="topKI"></div>
+                    </div>
+
+                    <div class="radarWrap">
+                        <div class="radarCanvas">
+                            <canvas id="radar"></canvas>
+                        </div>
+                        <div class="radarLegend">
+                            <b>Netzdiagramm:</b> Domänen • Literatur • KI — jeder neue Vorgang schlägt die jeweilige Achse um 1 aus.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Nutzungsstatistik -->
+                <section class="stats" id="stats">
+                    <h3>Nutzungsstatistik</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>Anzahl Aufrufe</th>
+                                <th>Favorit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="countTableBody"></tbody>
+                    </table>
+                </section>
+
+                <!-- Literatur-Statistik -->
+                <section class="stats" id="literatureStats">
+                    <h3>Literaturrecherche-Statistik</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Anzahl Aufrufe</th>
+                                <th>Schlagwörter</th>
+                            </tr>
+                        </thead>
+                        <tbody id="litTableBody"></tbody>
+                    </table>
+                </section>
+
+                <!-- KI-Statistik -->
+                <section class="stats" id="kiStats">
+                    <h3>KI-Anfragen</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Modell</th>
+                                <th>Datum</th>
+                                <th>Prompt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kiTableBody"></tbody>
+                    </table>
+                </section>
+
+                <footer>
+                    <a id="footerLink" href="https://datenflix007.github.io/" target="_blank" rel="noopener">© <span id="year"></span> Felix Staacke</a>
+                </footer>
+            </div>
+            <!-- /#mainColumn -->
         </div>
-        <div class="control" id="ki_query_group" style="display:none; min-width:min(560px,100%);">
-          <label for="ki_query">Prompt</label>
-          <form id="ki_form" class="row" style="gap:10px;">
-            <input id="ki_query" type="text" placeholder="Frag die KI …" required style="flex:1;"/>
-            <button>Anfragen</button>
-          </form>
-        </div>
-      </div>
+        <!-- /#appGrid -->
     </div>
+    <!-- /.shell -->
 
-    <!-- Favoriten-Leiste -->
-    <div id="favoritesBar" class="favoritesBar"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+    <script>
+        /* Pfad zum Tools-Ordner setzen, z.B. "/tools/".
+                                                                                           Wenn leer ("" oder null), wird die Tools-Leiste nicht angezeigt. */
+        // statt: const TOOLS_PATH = "/tools/";
+        const RAW_TOOLS_PATH = "tools/"; // relativer Ordnername neben index.html
+        const TOOLS_PATH = new URL(RAW_TOOLS_PATH, document.baseURI).href;
 
-    <!-- Radar + Top 5 an den Ecken -->
-    <section class="radarArea">
-      <div class="topBox box-domains">
-        <h4>Top 5 Domains</h4>
-        <div id="topDomains"></div>
-      </div>
-      <div class="topBox box-literatur">
-        <h4>Top 5 Literatur</h4>
-        <div id="topLit"></div>
-      </div>
-      <div class="topBox box-ki">
-        <h4>Top 5 KI-Prompts</h4>
-        <div id="topKI"></div>
-      </div>
 
-      <div class="radarWrap">
-        <div class="radarCanvas">
-          <canvas id="radar"></canvas>
-        </div>
-        <div class="radarLegend">
-          <b>Netzdiagramm:</b> Domänen • Literatur • KI — jeder neue Vorgang schlägt die jeweilige Achse um 1 aus.
-        </div>
-      </div>
-    </section>
+        document.addEventListener("DOMContentLoaded", function() {
+            /* ---------- DOM ---------- */
+            const appGrid = document.getElementById('appGrid');
+            const toolsPanel = document.getElementById('toolsPanel');
+            const toolsList = document.getElementById('toolsList');
+            const toolsLoading = document.getElementById('toolsLoading');
 
-    <!-- Nutzungsstatistik -->
-    <section class="stats" id="stats">
-      <h3>Nutzungsstatistik</h3>
-      <table>
-        <thead>
-          <tr><th>Domain</th><th>Anzahl Aufrufe</th><th>Favorit</th></tr>
-        </thead>
-        <tbody id="countTableBody"></tbody>
-      </table>
-    </section>
+            const searchType = document.getElementById('searchType');
 
-    <!-- Literatur-Statistik -->
-    <section class="stats" id="literatureStats">
-      <h3>Literaturrecherche-Statistik</h3>
-      <table>
-        <thead><tr><th>Name</th><th>Anzahl Aufrufe</th><th>Schlagwörter</th></tr></thead>
-        <tbody id="litTableBody"></tbody>
-      </table>
-    </section>
+            const free_group = document.getElementById('free_group');
+            const free_form = document.getElementById('free_form');
+            const free_input = document.getElementById('free_input');
 
-    <!-- KI-Statistik -->
-    <section class="stats" id="kiStats">
-      <h3>KI-Anfragen</h3>
-      <table>
-        <thead><tr><th>Modell</th><th>Datum</th><th>Prompt</th></tr></thead>
-        <tbody id="kiTableBody"></tbody>
-      </table>
-    </section>
+            const lit_group = document.getElementById('lit_group');
+            const lit_query_group = document.getElementById('lit_query_group');
+            const lit_engine = document.getElementById('lit_engine');
+            const lit_form = document.getElementById('lit_form');
+            const lit_query = document.getElementById('lit_query');
 
-    <footer>
-      <a id="footerLink" href="https://datenflix007.github.io/" target="_blank" rel="noopener">© <span id="year"></span> Felix Staacke</a>
-    </footer>
-  </div>
+            const ki_group = document.getElementById('ki_group');
+            const ki_query_group = document.getElementById('ki_query_group');
+            const ki_model = document.getElementById('ki_model');
+            const ki_form = document.getElementById('ki_form');
+            const ki_query = document.getElementById('ki_query');
+            const ki_hint = document.getElementById('ki_hint');
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      /* ---------- DOM ---------- */
-      const searchType = document.getElementById('searchType');
+            const favoritesBar = document.getElementById("favoritesBar");
+            const tableBody = document.getElementById("countTableBody");
+            const litTableBody = document.getElementById("litTableBody");
+            const kiTableBody = document.getElementById("kiTableBody");
 
-      const free_group = document.getElementById('free_group');
-      const free_form  = document.getElementById('free_form');
-      const free_input = document.getElementById('free_input');
+            const topDomainsEl = document.getElementById('topDomains');
+            const topLitEl = document.getElementById('topLit');
+            const topKIEl = document.getElementById('topKI');
 
-      const lit_group = document.getElementById('lit_group');
-      const lit_query_group = document.getElementById('lit_query_group');
-      const lit_engine = document.getElementById('lit_engine');
-      const lit_form = document.getElementById('lit_form');
-      const lit_query = document.getElementById('lit_query');
+            document.getElementById('year').textContent = new Date().getFullYear();
 
-      const ki_group = document.getElementById('ki_group');
-      const ki_query_group = document.getElementById('ki_query_group');
-      const ki_model = document.getElementById('ki_model');
-      const ki_form = document.getElementById('ki_form');
-      const ki_query = document.getElementById('ki_query');
-      const ki_hint = document.getElementById('ki_hint');
-
-      const favoritesBar = document.getElementById("favoritesBar");
-      const tableBody = document.getElementById("countTableBody");
-      const litTableBody = document.getElementById("litTableBody");
-      const kiTableBody = document.getElementById("kiTableBody");
-
-      const topDomainsEl= document.getElementById('topDomains');
-      const topLitEl    = document.getElementById('topLit');
-      const topKIEl     = document.getElementById('topKI');
-
-      document.getElementById('year').textContent = new Date().getFullYear();
-
-      /* ---------- Storage ---------- */
-      let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}");             // {domain: {count, dates[]}}
-      let favorites    = JSON.parse(localStorage.getItem("favoritesDomains") || "[]");         // [domain]
-      let literatur    = JSON.parse(localStorage.getItem("literaturKeywords") || "{}");        // {engine: [{keyword,date}]}
-      let kiQueries    = JSON.parse(localStorage.getItem("kiQueries") || "[]");                // [{model,prompt,date}]
-
-      /* ---------- Helpers ---------- */
-      const pad2 = (n)=> String(n).padStart(2,'0');
-      const todayISO = ()=> {
-        const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-      };
-      function ensure(obj, key, def){ if(!obj[key]) obj[key]=def; return obj[key]; }
-
-      function isFavorite(domain){ return favorites.includes(domain); }
-      function toggleFavorite(domain){
-        if(isFavorite(domain)) favorites = favorites.filter(d=> d!==domain);
-        else favorites.push(domain);
-        localStorage.setItem('favoritesDomains', JSON.stringify(favorites));
-        refreshFavoritesBar(); updateDomainTable(); updateTopLists(); updateRadar();
-      }
-
-      function upsertDomainCount(domain){
-        const entry = ensure(siteCounters, domain, {count:0, dates:[]});
-        entry.count += 1; entry.dates.push(todayISO());
-        localStorage.setItem("siteCounters", JSON.stringify(siteCounters));
-      }
-
-      /* ---------- Suche: Show/Hide ---------- */
-      searchType.addEventListener('change', ()=>{
-        const v = searchType.value;
-        [free_group, lit_group, lit_query_group, ki_group, ki_query_group].forEach(el=> el.style.display='none');
-        if(v==='frei'){ free_group.style.display='block'; free_input.focus(); }
-        else if(v==='literatur'){ lit_group.style.display='block'; lit_query_group.style.display='block'; lit_query.focus(); }
-        else if(v==='ki'){ ki_group.style.display='block'; ki_query_group.style.display='block'; ki_query.focus(); updateKiHint(); }
-      });
-
-      /* ---------- Freisuche ---------- */
-      free_form.addEventListener('submit', (e)=>{
-        e.preventDefault();
-        const input = free_input.value.trim();
-        if(!input) return;
-
-        let url = input, domain;
-        try { domain = new URL(input.startsWith('http')?input:'https://'+input).hostname; }
-        catch { domain = input; }
-
-        upsertDomainCount(domain);
-        updateDomainTable(); refreshFavoritesBar(); updateTopLists(); updateRadar();
-
-        const finalUrl = (domain === input)
-          ? `https://www.google.com/search?q=${encodeURIComponent(input)}`
-          : (url.startsWith('http') ? url : 'https://' + url);
-        window.open(finalUrl, '_blank');
-        free_input.value='';
-      });
-
-      /* ---------- Literatur ---------- */
-      lit_form.addEventListener('submit',(e)=>{
-        e.preventDefault();
-        const kw = lit_query.value.trim(); if(!kw) return;
-        const eng = lit_engine.value;
-        const date = todayISO();
-        ensure(literatur, eng, []);
-        literatur[eng].push({keyword:kw,date});
-        localStorage.setItem('literaturKeywords', JSON.stringify(literatur));
-        updateLiteratureTable(); updateTopLists(); updateRadar();
-
-        const urls = {
-          google:`https://www.google.com/search?q=${encodeURIComponent(kw)}`,
-          thulb:`https://suche.thulb.uni-jena.de/Search/Results?lookfor=${encodeURIComponent(kw)}`,
-          jstor:`https://www.jstor.org/action/doBasicSearch?Query=${encodeURIComponent(kw)}`
-        };
-        window.open(urls[eng], '_blank');
-        lit_query.value='';
-      });
-
-      /* ---------- KI ---------- */
-      function updateKiHint(){
-        const needsPaste = (ki_model.value==='openai' || ki_model.value==='copilot' || ki_model.value==='claude');
-        ki_hint.style.display = needsPaste ? 'block' : 'none';
-      }
-      ki_model.addEventListener('change', updateKiHint);
-
-      ki_form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const prompt = ki_query.value.trim(); if(!prompt) return;
-        const model = ki_model.value;
-        const date = todayISO();
-        kiQueries.push({model, prompt, date});
-        localStorage.setItem('kiQueries', JSON.stringify(kiQueries));
-        updateKiTable(); updateTopLists(); updateRadar();
-
-        const urls = {
-          openai:     "https://chat.openai.com/",
-          copilot:    "https://copilot.microsoft.com/",
-          claude:     "https://claude.ai/new",
-          perplexity: "https://www.perplexity.ai/?q=" + encodeURIComponent(prompt)
-        };
-        if(model!=='perplexity'){
-          try{ await navigator.clipboard.writeText(prompt); }catch{}
-        }
-        window.open(urls[model], '_blank');
-        ki_query.value='';
-        updateKiHint();
-      });
-
-      /* ---------- Favoriten / Tabellen ---------- */
-      function refreshFavoritesBar(){
-        favoritesBar.innerHTML = favorites
-          .map(d=>`<a class="favLink" data-domain="${d}" href="https://${d}" target="_blank" rel="noopener">${d}</a>`)
-          .join('');
-        favoritesBar.style.display = favorites.length ? 'flex' : 'none';
-      }
-
-      function updateDomainTable(){
-        tableBody.innerHTML = "";
-        const rows = Object.entries(siteCounters).sort((a,b)=>b[1].count-a[1].count);
-        for(const [domain,{count}] of rows){
-          const favOn = isFavorite(domain);
-          const tr = document.createElement('tr');
-          tr.innerHTML =
-            `<td><a class="domainLink" data-domain="${domain}" href="https://${domain}" target="_blank" rel="noopener" style="color:#dfe7ff;">${domain}</a></td>`+
-            `<td>${count}</td>`+
-            `<td style="width:70px; text-align:center;">`+
-            `<button class="star ${favOn?'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn?'★':'☆'}</button>`+
-            `</td>`;
-          tableBody.appendChild(tr);
-        }
-      }
-
-      function updateLiteratureTable(){
-        litTableBody.innerHTML = "";
-        const engines = ["thulb","jstor","google"];
-        for(const eng of engines){
-          const arr = literatur[eng] || [];
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${eng.charAt(0).toUpperCase()+eng.slice(1)}</td>`+
-                         `<td>${arr.length}</td>`+
-                         `<td>${arr.map(e=>e.keyword).join(', ')}</td>`;
-          litTableBody.appendChild(tr);
-        }
-      }
-
-      function updateKiTable(){
-        kiTableBody.innerHTML = "";
-        (kiQueries||[]).slice().reverse().forEach(({model,date,prompt})=>{
-          const tr = document.createElement('tr');
-          const label = ({openai:"OpenAI",copilot:"Copilot",perplexity:"Perplexity",claude:"Claude"})[model]||model;
-          tr.innerHTML = `<td>${label}</td><td>${date}</td><td>${prompt}</td>`;
-          kiTableBody.appendChild(tr);
-        });
-      }
-
-      /* ---------- Top 5 ---------- */
-      function renderPills(el, arr){
-        el.innerHTML = arr.slice(0,5).map(x => `<span class="pill"><span>${x.label}</span><span class="cnt">${x.count}</span></span>`).join('') || '<span class="pill">–</span>';
-      }
-      function updateTopLists(){
-        const dom = Object.entries(siteCounters).map(([d,v])=>({label:d,count:v.count}))
-          .sort((a,b)=>b.count-a.count);
-        renderPills(topDomainsEl, dom);
-
-        const litMap = {};
-        Object.values(literatur||{}).flat().forEach(({keyword})=>{
-          if(!keyword) return; litMap[keyword]=(litMap[keyword]||0)+1;
-        });
-        const litArr = Object.entries(litMap).map(([k,c])=>({label:k,count:c})).sort((a,b)=>b.count-a.count);
-        renderPills(topLitEl, litArr);
-
-        const kiMap = {};
-        (kiQueries||[]).forEach(({prompt})=>{
-          if(!prompt) return; kiMap[prompt]=(kiMap[prompt]||0)+1;
-        });
-        const kiArr = Object.entries(kiMap).map(([p,c])=>({label:p,count:c})).sort((a,b)=>b.count-a.count);
-        renderPills(topKIEl, kiArr);
-      }
-
-      /* ---------- Radar (Chart.js) ---------- */
-      const radarCtx = document.getElementById('radar').getContext('2d');
-      const radarChart = new Chart(radarCtx, {
-        type: 'radar',
-        data: { labels: ['Domains','Literatur','KI'], datasets: [{ data: [0,0,0], backgroundColor:'rgba(122,168,255,.55)', borderColor:'rgba(122,168,255,.9)', borderWidth:2, pointRadius:0 }]},
-        options: {
-          responsive: true,
-          plugins: { legend: { display:false } },
-          maintainAspectRatio: false,
-          scales: {
-            r: {
-              beginAtZero: true,
-              suggestedMax: 5,
-              ticks: { display:false },
-              angleLines: { color:'rgba(255,255,255,.25)' },
-              grid: { color:'rgba(255,255,255,.18)', lineWidth:1, borderDash:[4,6] },
-              pointLabels: { color:'rgba(255,255,255,.9)', font:{ size:12 } }
+            /* ---------- Tools-Leiste (optional) ---------- */
+            function ensureTrailingSlash(p) {
+                return p.endsWith('/') ? p : (p + '/');
             }
-          }
+
+            async function fromManifest(base) {
+                try {
+                    const res = await fetch(base + 'tools.json', {
+                        cache: 'no-store'
+                    });
+                    if (!res.ok) {
+                        console.warn('tools.json status:', res.status, base);
+                        return null;
+                    }
+                    const data = await res.json();
+                    const items = Array.isArray(data) ? data : (Array.isArray(data.files) ? data.files : []);
+                    return items.map(it => {
+                        if (typeof it === 'string') return {
+                            file: it,
+                            label: it.replace(/\.html?$/i, '')
+                        };
+                        return {
+                            file: it.file,
+                            label: it.label || (it.file || '').replace(/\.html?$/i, '')
+                        };
+                    }).filter(x => x.file && /\.html?$/i.test(x.file));
+                } catch {
+                    return null;
+                }
+            }
+
+            async function fromDirectoryListing(base) {
+                try {
+                    const res = await fetch(base, {
+                        cache: 'no-store'
+                    });
+                    if (!res.ok) return null;
+                    const txt = await res.text();
+                    const doc = new DOMParser().parseFromString(txt, 'text/html');
+                    const links = Array.from(doc.querySelectorAll('a[href]'))
+                        .map(a => a.getAttribute('href'))
+                        .filter(h => h && /\.html?$/i.test(h))
+                        .map(h => ({
+                            file: h,
+                            label: h.split('/').pop().replace(/\.html?$/i, '')
+                        }));
+                    return links.length ? links : null;
+                } catch {
+                    return null;
+                }
+            }
+
+            async function fromIndexHtml(base) {
+                try {
+                    const res = await fetch(base + 'index.html', {
+                        cache: 'no-store'
+                    });
+                    if (!res.ok) return null;
+                    const txt = await res.text();
+                    const doc = new DOMParser().parseFromString(txt, 'text/html');
+                    const links = Array.from(doc.querySelectorAll('a[href]'))
+                        .map(a => a.getAttribute('href'))
+                        .filter(h => h && /\.html?$/i.test(h))
+                        .map(h => ({
+                            file: h,
+                            label: h.split('/').pop().replace(/\.html?$/i, '')
+                        }));
+                    return links.length ? links : null;
+                } catch {
+                    return null;
+                }
+            }
+
+            async function tryLoadTools() {
+                if (!TOOLS_PATH) { // kein Pfad -> Tools ausblenden & 1-Spalten-Layout
+                    toolsPanel.style.display = 'none';
+                    appGrid.classList.add('no-tools');
+                    return;
+                }
+
+                const base = ensureTrailingSlash(TOOLS_PATH);
+
+                // Panel sofort zeigen (damit "Lade …" sichtbar ist)
+                toolsPanel.style.display = 'block';
+                appGrid.classList.remove('no-tools');
+                toolsLoading.style.display = 'block';
+                toolsList.innerHTML = '';
+
+                // 1) Manifest, 2) Directory Listing, 3) index.html parsen
+                let items = await fromManifest(base);
+                if (!items) items = await fromDirectoryListing(base);
+                if (!items) items = await fromIndexHtml(base);
+
+                if (!items || !items.length) {
+                    toolsLoading.innerHTML = 'Keine .html-Dateien gefunden oder Zugriff auf Ordner blockiert. ' +
+                        'Lege optional <code>tools.json</code> im Tools-Ordner an (Array mit Dateinamen).';
+                    return;
+                }
+
+                toolsLoading.style.display = 'none';
+
+                items.forEach(({
+                    file,
+                    label
+                }) => {
+                    const url = new URL(file, base).toString();
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${url}" target="_blank" rel="noopener">${label}</a>`;
+                    toolsList.appendChild(li);
+                });
+            }
+            tryLoadTools();
+
+            /* ---------- Storage ---------- */
+            let siteCounters = JSON.parse(localStorage.getItem("siteCounters") || "{}"); // {domain: {count, dates[]}}
+            let favorites = JSON.parse(localStorage.getItem("favoritesDomains") || "[]"); // [domain]
+            let literatur = JSON.parse(localStorage.getItem("literaturKeywords") || "{}"); // {engine: [{keyword,date}]}
+            let kiQueries = JSON.parse(localStorage.getItem("kiQueries") || "[]"); // [{model,prompt,date}]
+
+            /* ---------- Helpers ---------- */
+            const pad2 = (n) => String(n).padStart(2, '0');
+            const todayISO = () => {
+                const d = new Date();
+                return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+            };
+
+            function ensure(obj, key, def) {
+                if (!obj[key]) obj[key] = def;
+                return obj[key];
+            }
+
+            function isFavorite(domain) {
+                return favorites.includes(domain);
+            }
+
+            function toggleFavorite(domain) {
+                if (isFavorite(domain)) favorites = favorites.filter(d => d !== domain);
+                else favorites.push(domain);
+                localStorage.setItem('favoritesDomains', JSON.stringify(favorites));
+                refreshFavoritesBar();
+                updateDomainTable();
+                updateTopLists();
+                updateRadar();
+            }
+
+            function upsertDomainCount(domain) {
+                const entry = ensure(siteCounters, domain, {
+                    count: 0,
+                    dates: []
+                });
+                entry.count += 1;
+                entry.dates.push(todayISO());
+                localStorage.setItem("siteCounters", JSON.stringify(siteCounters));
+            }
+
+            /* ---------- Suche: Show/Hide ---------- */
+            searchType.addEventListener('change', () => {
+                const v = searchType.value;
+                [free_group, lit_group, lit_query_group, ki_group, ki_query_group].forEach(el => el.style.display = 'none');
+                if (v === 'frei') {
+                    free_group.style.display = 'block';
+                    free_input.focus();
+                } else if (v === 'literatur') {
+                    lit_group.style.display = 'block';
+                    lit_query_group.style.display = 'block';
+                    lit_query.focus();
+                } else if (v === 'ki') {
+                    ki_group.style.display = 'block';
+                    ki_query_group.style.display = 'block';
+                    ki_query.focus();
+                    updateKiHint();
+                }
+            });
+
+            /* ---------- Freisuche ---------- */
+            free_form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = free_input.value.trim();
+                if (!input) return;
+
+                let url = input,
+                    domain;
+                try {
+                    domain = new URL(input.startsWith('http') ? input : 'https://' + input).hostname;
+                } catch {
+                    domain = input;
+                }
+
+                upsertDomainCount(domain);
+                updateDomainTable();
+                refreshFavoritesBar();
+                updateTopLists();
+                updateRadar();
+
+                const finalUrl = (domain === input) ?
+                    `https://www.google.com/search?q=${encodeURIComponent(input)}` :
+                    (url.startsWith('http') ? url : 'https://' + url);
+                window.open(finalUrl, '_blank');
+                free_input.value = '';
+            });
+
+            /* ---------- Literatur ---------- */
+            lit_form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const kw = lit_query.value.trim();
+                if (!kw) return;
+                const eng = lit_engine.value;
+                const date = todayISO();
+                ensure(literatur, eng, []);
+                literatur[eng].push({
+                    keyword: kw,
+                    date
+                });
+                localStorage.setItem('literaturKeywords', JSON.stringify(literatur));
+                updateLiteratureTable();
+                updateTopLists();
+                updateRadar();
+
+                const urls = {
+                    google: `https://www.google.com/search?q=${encodeURIComponent(kw)}`,
+                    thulb: `https://suche.thulb.uni-jena.de/Search/Results?lookfor=${encodeURIComponent(kw)}`,
+                    jstor: `https://www.jstor.org/action/doBasicSearch?Query=${encodeURIComponent(kw)}`
+                };
+                window.open(urls[eng], '_blank');
+                lit_query.value = '';
+            });
+
+            /* ---------- KI ---------- */
+            function updateKiHint() {
+                const needsPaste = (ki_model.value === 'openai' || ki_model.value === 'copilot' || ki_model.value === 'claude');
+                ki_hint.style.display = needsPaste ? 'block' : 'none';
+            }
+            ki_model.addEventListener('change', updateKiHint);
+
+            ki_form.addEventListener('submit', async(e) => {
+                e.preventDefault();
+                const prompt = ki_query.value.trim();
+                if (!prompt) return;
+                const model = ki_model.value;
+                const date = todayISO();
+                kiQueries.push({
+                    model,
+                    prompt,
+                    date
+                });
+                localStorage.setItem('kiQueries', JSON.stringify(kiQueries));
+                updateKiTable();
+                updateTopLists();
+                updateRadar();
+
+                const urls = {
+                    openai: "https://chat.openai.com/",
+                    copilot: "https://copilot.microsoft.com/",
+                    claude: "https://claude.ai/new",
+                    perplexity: "https://www.perplexity.ai/?q=" + encodeURIComponent(prompt)
+                };
+                if (model !== 'perplexity') {
+                    try {
+                        await navigator.clipboard.writeText(prompt);
+                    } catch {}
+                }
+                window.open(urls[model], '_blank');
+                ki_query.value = '';
+                updateKiHint();
+            });
+
+            /* ---------- Favoriten / Tabellen ---------- */
+            function refreshFavoritesBar() {
+                favoritesBar.innerHTML = favorites
+                    .map(d => `<a class="favLink" data-domain="${d}" href="https://${d}" target="_blank" rel="noopener">${d}</a>`)
+                    .join('');
+                favoritesBar.style.display = favorites.length ? 'flex' : 'none';
+            }
+
+            function updateDomainTable() {
+                tableBody.innerHTML = "";
+                const rows = Object.entries(siteCounters).sort((a, b) => b[1].count - a[1].count);
+                for (const [domain, {
+                        count
+                    }] of rows) {
+                    const favOn = isFavorite(domain);
+                    const tr = document.createElement('tr');
+                    tr.innerHTML =
+                        `<td><a class="domainLink" data-domain="${domain}" href="https://${domain}" target="_blank" rel="noopener" style="color:#dfe7ff;">${domain}</a></td>` +
+                        `<td>${count}</td>` +
+                        `<td style="width:70px; text-align:center;">` +
+                        `<button class="star ${favOn?'on':''}" data-domain="${domain}" aria-label="Favorit umschalten">${favOn?'★':'☆'}</button>` +
+                        `</td>`;
+                    tableBody.appendChild(tr);
+                }
+            }
+
+            function updateLiteratureTable() {
+                litTableBody.innerHTML = "";
+                const engines = ["thulb", "jstor", "google"];
+                for (const eng of engines) {
+                    const arr = literatur[eng] || [];
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${eng.charAt(0).toUpperCase()+eng.slice(1)}</td>` +
+                        `<td>${arr.length}</td>` +
+                        `<td>${arr.map(e=>e.keyword).join(', ')}</td>`;
+                    litTableBody.appendChild(tr);
+                }
+            }
+
+            function updateKiTable() {
+                kiTableBody.innerHTML = "";
+                (kiQueries || []).slice().reverse().forEach(({
+                    model,
+                    date,
+                    prompt
+                }) => {
+                    const tr = document.createElement('tr');
+                    const label = ({
+                        openai: "OpenAI",
+                        copilot: "Copilot",
+                        perplexity: "Perplexity",
+                        claude: "Claude"
+                    })[model] || model;
+                    tr.innerHTML = `<td>${label}</td><td>${date}</td><td>${prompt}</td>`;
+                    kiTableBody.appendChild(tr);
+                });
+            }
+
+            /* ---------- Top 5 ---------- */
+            function renderPills(el, arr) {
+                el.innerHTML = arr.slice(0, 5).map(x => `<span class="pill"><span>${x.label}</span><span class="cnt">${x.count}</span></span>`).join('') || '<span class="pill">–</span>';
+            }
+
+            function updateTopLists() {
+                const dom = Object.entries(siteCounters).map(([d, v]) => ({
+                        label: d,
+                        count: v.count
+                    }))
+                    .sort((a, b) => b.count - a.count);
+                renderPills(topDomainsEl, dom);
+
+                const litMap = {};
+                Object.values(literatur || {}).flat().forEach(({
+                    keyword
+                }) => {
+                    if (!keyword) return;
+                    litMap[keyword] = (litMap[keyword] || 0) + 1;
+                });
+                const litArr = Object.entries(litMap).map(([k, c]) => ({
+                    label: k,
+                    count: c
+                })).sort((a, b) => b.count - a.count);
+                renderPills(topLitEl, litArr);
+
+                const kiMap = {};
+                (kiQueries || []).forEach(({
+                    prompt
+                }) => {
+                    if (!prompt) return;
+                    kiMap[prompt] = (kiMap[prompt] || 0) + 1;
+                });
+                const kiArr = Object.entries(kiMap).map(([p, c]) => ({
+                    label: p,
+                    count: c
+                })).sort((a, b) => b.count - a.count);
+                renderPills(topKIEl, kiArr);
+            }
+
+            /* ---------- Radar (Chart.js) ---------- */
+            const radarCtx = document.getElementById('radar').getContext('2d');
+            const radarChart = new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Domains', 'Literatur', 'KI'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: 'rgba(122,168,255,.55)',
+                        borderColor: 'rgba(122,168,255,.9)',
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            suggestedMax: 5,
+                            ticks: {
+                                display: false
+                            },
+                            angleLines: {
+                                color: 'rgba(255,255,255,.25)'
+                            },
+                            grid: {
+                                color: 'rgba(255,255,255,.18)',
+                                lineWidth: 1,
+                                borderDash: [4, 6]
+                            },
+                            pointLabels: {
+                                color: 'rgba(255,255,255,.9)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            function totals() {
+                const domains = Object.values(siteCounters).reduce((s, v) => s + v.count, 0);
+                const literature = Object.values(literatur || {}).reduce((s, a) => s + (Array.isArray(a) ? a.length : 0), 0);
+                const ki = Array.isArray(kiQueries) ? kiQueries.length : 0;
+                return [domains, literature, ki];
+            }
+
+
+            function updateRadar() {
+                const t = totals();
+                const max = Math.max(5, ...t);
+                radarChart.options.scales.r.suggestedMax = max;
+                radarChart.data.datasets[0].data = t;
+                radarChart.update();
+            }
+
+            /* ---------- Click Events zählen ---------- */
+            tableBody.addEventListener('click', (e) => {
+                const a = e.target.closest('a.domainLink');
+                if (a) {
+                    const d = a.getAttribute('data-domain');
+                    upsertDomainCount(d);
+                    updateDomainTable();
+                    updateTopLists();
+                    updateRadar();
+                    return;
+                }
+                const star = e.target.closest('.star');
+                if (star) {
+                    toggleFavorite(star.getAttribute('data-domain'));
+                }
+            });
+
+            favoritesBar.addEventListener('click', (e) => {
+                const a = e.target.closest('a.favLink');
+                if (!a) return;
+                const domain = a.getAttribute('data-domain');
+                upsertDomainCount(domain);
+                updateDomainTable();
+                updateTopLists();
+                updateRadar();
+            });
+
+            /* ---------- Initial render ---------- */
+            refreshFavoritesBar();
+            updateDomainTable();
+            updateLiteratureTable();
+            updateKiTable();
+            updateTopLists();
+            updateRadar();
+            updateKiHint();
+        });
+
+        function layoutRadarArea() {
+            const area = document.querySelector('.radarArea');
+            const canvas = document.getElementById('radar');
+            const boxes = document.querySelectorAll('.topBox');
+            if (!area || !canvas) return;
+
+            const areaRect = area.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+            let maxBottom = canvasRect.bottom;
+
+            boxes.forEach(b => {
+                const r = b.getBoundingClientRect();
+                if (r.bottom > maxBottom) maxBottom = r.bottom;
+            });
+
+            const needed = Math.ceil(maxBottom - areaRect.top + 16);
+            area.style.height = needed + 'px';
         }
-      });
-      function totals(){
-        const domains   = Object.values(siteCounters).reduce((s,v)=>s+v.count,0);
-        const literature= Object.values(literatur||{}).reduce((s,a)=>s+(a?.length||0),0);
-        const ki        = (kiQueries||[]).length;
-        return [domains, literature, ki];
-      }
-      function updateRadar(){
-        const t = totals();
-        const max = Math.max(5, ...t);
-        radarChart.options.scales.r.suggestedMax = max;
-        radarChart.data.datasets[0].data = t;
-        radarChart.update();
-      }
-
-      /* ---------- Click Events zählen ---------- */
-      tableBody.addEventListener('click', (e)=>{
-        const a = e.target.closest('a.domainLink');
-        if(a){
-          const d = a.getAttribute('data-domain');
-          upsertDomainCount(d);
-          updateDomainTable(); updateTopLists(); updateRadar();
-          return;
-        }
-        const star = e.target.closest('.star');
-        if(star){ toggleFavorite(star.getAttribute('data-domain')); }
-      });
-
-      favoritesBar.addEventListener('click', (e)=>{
-        const a=e.target.closest('a.favLink'); if(!a) return;
-        const domain = a.getAttribute('data-domain');
-        upsertDomainCount(domain);
-        updateDomainTable(); updateTopLists(); updateRadar();
-      });
-
-      /* ---------- Initial render ---------- */
-      refreshFavoritesBar();
-      updateDomainTable();
-      updateLiteratureTable();
-      updateKiTable();
-      updateTopLists();
-      updateRadar();
-      updateKiHint();
-    });
-
-    function layoutRadarArea() {
-      const area = document.querySelector('.radarArea');
-      const canvas = document.getElementById('radar');
-      const boxes = document.querySelectorAll('.topBox');
-      if (!area || !canvas) return;
-
-      // BoundingRects
-      const areaRect   = area.getBoundingClientRect();
-      const canvasRect = canvas.getBoundingClientRect();
-      let maxBottom = canvasRect.bottom;
-
-      boxes.forEach(b => {
-        const r = b.getBoundingClientRect();
-        if (r.bottom > maxBottom) maxBottom = r.bottom;
-      });
-
-      // 16px Luft unten
-      const needed = Math.ceil(maxBottom - areaRect.top + 16);
-
-      // Fixhöhe setzen (oder minHeight, wenn du anderen Content drunter hast)
-      area.style.height = needed + 'px';
-    }
-
-  </script>
+    </script>
 </body>
+
 </html>
